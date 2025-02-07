@@ -1,0 +1,20 @@
+body,
+#app {
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+@font-face {
+  font-family: 'msyh';
+  src: url(msyh.ttf);
+}
+* {
+  box-sizing: border-box;
+  font-family: 'msyh';
+}
+.more-icon {
+  display: inline-block;
+  content: url(more.svg);
+}
