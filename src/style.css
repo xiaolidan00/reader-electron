@@ -5,6 +5,11 @@ body,
   position: absolute;
   height: 100%;
   width: 100%;
+  color: var(--font);
+}
+:root {
+  --font: #505050;
+  --bg: rgb(250, 235, 215);
 }
 @font-face {
   font-family: 'msyh';
@@ -17,4 +22,16 @@ body,
 .more-icon {
   display: inline-block;
   content: url(more.svg);
+}
+.search-icon {
+  display: inline-block;
+  content: url(search.svg);
+}
+.back-icon {
+  display: inline-block;
+  content: url(back.svg);
+}
+.book-icon {
+  display: inline-block;
+  content: url(book.svg);
 }

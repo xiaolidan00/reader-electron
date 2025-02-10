@@ -2,10 +2,10 @@
   import { ref, computed } from 'vue';
   import List from './components/List.vue';
   import Book from './components/Book.vue';
+  import { selectBook } from './config';
 
-  const isBookRef = ref<boolean>(false);
   const currentPart = computed(() => {
-    return isBookRef.value ? Book : List;
+    return selectBook.value ? Book : List;
   });
 </script>
 
