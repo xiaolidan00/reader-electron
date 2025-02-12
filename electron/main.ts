@@ -48,7 +48,7 @@ function createWindow() {
     backgroundColor: 'rgb(250, 235, 215)',
     autoHideMenuBar: true,
 
-    // icon: path.join(process.env.VITE_PUBLIC, 'logo.svg'),
+    icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs')
     }

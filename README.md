@@ -54,6 +54,7 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-binaries/
 ```
 
-# 注意实现
+# 注意事项
 
-要在管理员的命令行窗口执行`npm run build`
+- 要在管理员的命令行窗口执行`npm run build`
+- logo 图标一定要用 png
