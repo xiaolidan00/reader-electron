@@ -15,7 +15,6 @@
   });
   const openTxt = () => {
     window.ipcRenderer.send('openTxt');
-    loading.value = true;
   };
   const onReadTxt = (item: BookType) => {
     selectBook.value = item.id;
