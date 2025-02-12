@@ -122,7 +122,7 @@
     &.active {
       background-color: skyblue;
       border: solid 2px skyblue;
-      content: url(check.svg);
+      content: url(/check.svg);
     }
   }
   .search-box {
