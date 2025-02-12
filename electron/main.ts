@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import jschardet from 'jschardet';
 import path from 'node:path';
-import { spawn } from 'child_process';
+
+// import { spawn } from 'child_process';
 
 // import iconv from 'iconv-lite';
 
@@ -63,22 +64,22 @@ function createWindow() {
     win?.webContents.send('listTxt', bookList);
   });
 
-  function speedTxt(str: string) {
-    const child = spawn('powershell.exe', [
-      '-command',
-      `Add-Type -AssemblyName System.speech; $synth = New-Object -TypeName System.Speech.Synthesis.SpeechSynthesizer; $synth.Speak('${str}');`
-    ]);
-    child.on('message', (msg) => {
-      console.log(msg);
-    });
-    child.on('error', (err) => {
-      console.error(err);
-    });
+  // function speedTxt(str: string) {
+  //   const child = spawn('powershell.exe', [
+  //     '-command',
+  //     `Add-Type -AssemblyName System.speech; $synth = New-Object -TypeName System.Speech.Synthesis.SpeechSynthesizer; $synth.Speak('${str}');`
+  //   ]);
+  //   child.on('message', (msg) => {
+  //     console.log(msg);
+  //   });
+  //   child.on('error', (err) => {
+  //     console.error(err);
+  //   });
 
-    child.on('close', (code) => {
-      console.log(`子进程已退出，返回代码 ${code}`);
-    });
-  }
+  //   child.on('close', (code) => {
+  //     console.log(`子进程已退出，返回代码 ${code}`);
+  //   });
+  // }
   function updateBookIds() {
     bookList.sort((a, b) => b.readTime - a.readTime);
     bookList.forEach((item, idx) => {
@@ -122,9 +123,9 @@ function createWindow() {
       bookList.push(data);
     }
   }
-  ipcMain.on('speedTxt', (ev, str: string) => {
-    speedTxt(str);
-  });
+  // ipcMain.on('speedTxt', (ev, str: string) => {
+  //   speedTxt(str);
+  // });
   ipcMain.on('openTxt', () => {
     dialog
       .showOpenDialog(win!, {
@@ -261,7 +262,9 @@ function createWindow() {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'));
   }
-  win.webContents.openDevTools({ mode: 'detach' });
+  if (VITE_DEV_SERVER_URL) {
+    win.webContents.openDevTools({ mode: 'detach' });
+  }
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common

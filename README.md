@@ -46,3 +46,14 @@ downloadArtifact({
     process.exit(1);
   });
 ```
+
+# 配置 npm 镜像
+
+```ini
+electron_mirror=https://npmmirror.com/mirrors/electron/
+electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-binaries/
+```
+
+# 注意实现
+
+要在管理员的命令行窗口执行`npm run build`

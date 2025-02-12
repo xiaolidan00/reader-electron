@@ -1,11 +1,11 @@
 {
   "name": "reader-electron",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build && electron-builder",
+    "build": "vite build && electron-builder",
     "preview": "vite preview"
   },
   "dependencies": {

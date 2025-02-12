@@ -223,6 +223,7 @@
         const t = new SpeechSynthesisUtterance(str);
         t.voice = voiceList[state.voice];
         t.rate = state.speed;
+        t.volume = 100;
         speechSynthesis.speak(t);
         voiceSet.txt = str;
         voiceSet.speed = state.speed + 0;
