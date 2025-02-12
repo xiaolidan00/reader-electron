@@ -46,9 +46,12 @@ function createWindow() {
   win = new BrowserWindow({
     width: 480,
     height: 720,
+    // menuBarVisible: false,
     backgroundColor: 'rgb(250, 235, 215)',
     autoHideMenuBar: true,
-
+    // closable: false,
+    resizable: false,
+    minimizable: false,
     icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs')
