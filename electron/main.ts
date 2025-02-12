@@ -41,6 +41,7 @@ let bookIds: { [n: string]: number } = {};
 let bookList: BookType[] = [];
 
 const lineNum = 24;
+let currentPage = 'list';
 function createWindow() {
   win = new BrowserWindow({
     width: 480,
@@ -92,7 +93,7 @@ function createWindow() {
   }
 
   function updateTxt(item: string) {
-    const id = item.toString().replace(/[\.|\\|\:]/g, '_');
+    const id = item.toString().replace(/[\.|\:]/g, '_');
 
     const info = fs.statSync(item);
 
@@ -156,7 +157,17 @@ function createWindow() {
 
     return buf.toString();
   }
-  ipcMain.on('readedTxt', (ev, { id, chapter, index, total }) => {
+  function readedBook({
+    id,
+    chapter,
+    index,
+    total
+  }: {
+    id: string;
+    chapter: number;
+    index: number;
+    total: number;
+  }) {
     const data = {
       ...bookList[bookIds[id]],
       index,
@@ -166,6 +177,27 @@ function createWindow() {
     };
     bookList[bookIds[id]] = data;
     saveBook();
+  }
+
+  win.on('close', (ev) => {
+    if (currentPage === 'book') {
+      ev.preventDefault();
+      win!.webContents.send('closeBook');
+      ipcMain.once('closedBook', (ev, { id, chapter, index, total }) => {
+        readedBook({ id, chapter, index, total });
+        console.log('colsed book', { id, chapter, index, total });
+        setTimeout(() => {
+          win!.destroy();
+        }, 500);
+      });
+    }
+  });
+
+  ipcMain.on('currentPage', (ev, page: string) => {
+    currentPage = page;
+  });
+  ipcMain.on('readedTxt', (ev, { id, chapter, index, total }) => {
+    readedBook({ id, chapter, index, total });
     setTimeout(() => {
       win!.webContents.send('listTxt', bookList);
     }, 500);

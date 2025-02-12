@@ -86,10 +86,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue';
+  import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue';
   import type { ChapterType } from '../../@types';
   import { selectBook, loading, bookItem } from '../config';
-  import { nextTick } from 'vue';
 
   const contenTxt = ref<HTMLDivElement>();
   const PageNum = 18;
@@ -247,6 +246,15 @@
   };
   updateBook();
   window.ipcRenderer.once('readTxt', onReadTxt);
+  window.ipcRenderer.send('currentPage', 'book');
+  window.ipcRenderer.once('closeBook', () => {
+    window.ipcRenderer.send('closedBook', {
+      id: selectBook.value + '',
+      chapter: state.chapter,
+      index: state.index,
+      total: chapterList.value.length
+    });
+  });
   const showListen = () => {
     state.isListen = true;
     voiceList = speechSynthesis.getVoices();
@@ -255,6 +263,9 @@
   };
   onMounted(async () => {
     await nextTick();
+  });
+  onBeforeUnmount(() => {
+    speechSynthesis.cancel();
   });
 </script>
 

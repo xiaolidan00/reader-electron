@@ -69,8 +69,8 @@
     loading.value = false;
   };
   window.ipcRenderer.on('listTxt', refreshTxt);
+  window.ipcRenderer.send('currentPage', 'list');
   onBeforeUnmount(() => {
-    console.log(window.ipcRenderer);
     window.ipcRenderer.off('listTxt', refreshTxt);
   });
 </script>
@@ -89,8 +89,8 @@
     <span :class="[state.isEdit ? 'active' : '']" @click="state.isEdit = !state.isEdit"
       >批量操作</span
     >
-    <span @click="onDelTxt('record')">删除记录</span>
-    <span @click="onDelTxt('file')">删除文件</span>
+    <span v-if="state.isEdit" @click="onDelTxt('record')">删除记录</span>
+    <span v-if="state.isEdit" @click="onDelTxt('file')">删除文件</span>
   </div>
   <div class="book-list">
     <div class="book-item" v-for="item in showDataList" :key="item.name">
@@ -188,6 +188,9 @@
     text-align: center;
     padding: 5px;
     cursor: pointer;
+    &:hover {
+      transform: scale(1.1);
+    }
     .book-top {
       text-align: left;
       position: absolute;

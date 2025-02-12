@@ -14,7 +14,7 @@ body,
 }
 @font-face {
   font-family: 'msyh';
-  src: url(msyh.ttf);
+  src: url(/msyh.ttf);
 }
 * {
   box-sizing: border-box !important;
@@ -22,19 +22,19 @@ body,
 }
 .more-icon {
   display: inline-block;
-  content: url(more.svg);
+  content: url(/more.svg);
 }
 .search-icon {
   display: inline-block;
-  content: url(search.svg);
+  content: url(/search.svg);
 }
 .back-icon {
   display: inline-block;
-  content: url(back.svg);
+  content: url(/back.svg);
 }
 .book-icon {
   display: inline-block;
-  content: url(book.svg);
+  content: url(/book.svg);
 }
 @keyframes rotating {
   0% {
@@ -49,28 +49,28 @@ body,
 }
 .loading-icon {
   display: inline-block;
-  content: url(loading.svg);
+  content: url(/loading.svg);
   animation: rotating 1s linear infinite;
 }
 .listen-icon {
   display: inline-block;
-  content: url(listen.svg);
+  content: url(/listen.svg);
 }
 .play-icon {
   display: inline-block;
-  content: url(play.svg);
+  content: url(/play.svg);
 }
 .pre-icon {
   display: inline-block;
-  content: url(pre.svg);
+  content: url(/pre.svg);
 }
 .next-icon {
   display: inline-block;
-  content: url(next.svg);
+  content: url(/next.svg);
 }
 .stop-icon {
   display: inline-block;
-  content: url(stop.svg);
+  content: url(/stop.svg);
 }
 ::-webkit-scrollbar {
   background-color: transparent;

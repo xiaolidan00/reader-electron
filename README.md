@@ -57,4 +57,5 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 # 注意事项
 
 - 要在管理员的命令行窗口执行`npm run build`
-- logo 图标一定要用 png
+- logo 图标一定要用 大小为 256x256 的 png/jpg/ico 图片，不能用 svg
+- css 使用图片资源地址`url(/aaa.svg)`
