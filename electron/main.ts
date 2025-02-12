@@ -3,10 +3,14 @@ import { BrowserWindow, app, dialog, ipcMain } from 'electron';
 
 import { BOOKLIST } from './config';
 import { createRequire } from 'node:module';
+import encodingConvert from 'encoding';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
-import iconv from 'iconv-lite';
+import jschardet from 'jschardet';
 import path from 'node:path';
+import { spawn } from 'child_process';
+
+// import iconv from 'iconv-lite';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -55,9 +59,26 @@ function createWindow() {
       const books = fs.readFileSync(BOOKLIST).toString();
       bookList = JSON.parse(books) as BookType[];
       updateBookIds();
-      win?.webContents.send('listTxt', bookList);
     }
+    win?.webContents.send('listTxt', bookList);
   });
+
+  function speedTxt(str: string) {
+    const child = spawn('powershell.exe', [
+      '-command',
+      `Add-Type -AssemblyName System.speech; $synth = New-Object -TypeName System.Speech.Synthesis.SpeechSynthesizer; $synth.Speak('${str}');`
+    ]);
+    child.on('message', (msg) => {
+      console.log(msg);
+    });
+    child.on('error', (err) => {
+      console.error(err);
+    });
+
+    child.on('close', (code) => {
+      console.log(`子进程已退出，返回代码 ${code}`);
+    });
+  }
   function updateBookIds() {
     bookList.sort((a, b) => b.readTime - a.readTime);
     bookList.forEach((item, idx) => {
@@ -68,26 +89,19 @@ function createWindow() {
     fs.writeFileSync(BOOKLIST, JSON.stringify(bookList));
     updateBookIds();
   }
-  function readTxt(id: string, chapter: number, total: number) {
-    const data = {
-      ...bookList[bookIds[id]],
-      chapter,
-      total,
-      readTime: new Date().getTime()
-    };
-    bookList[bookIds[id]] = data;
-    saveBook();
-  }
+
   function updateTxt(item: string) {
-    const id = item.replace(/[\.|\\|\:]/g, '_');
+    const id = item.toString().replace(/[\.|\\|\:]/g, '_');
+
     const info = fs.statSync(item);
-    console.log(info);
+
     const name = item.substring(item.lastIndexOf('\\') + 1, item.lastIndexOf('.'));
     const data = {
       id: id,
       name: name,
       chapter: 0,
       total: 0,
+      index: 0,
       size: info.size,
       updateTime: info.mtimeMs,
       importTime: new Date().getTime(),
@@ -97,21 +111,29 @@ function createWindow() {
     };
     if (bookIds[id] > 0) {
       const before = bookList[bookIds[id]];
-      bookList[bookIds[id]] = { ...data, chapter: before.chapter, total: before.total };
+      bookList[bookIds[id]] = {
+        ...data,
+        chapter: before.chapter,
+        index: before.index,
+        total: before.total
+      };
     } else {
       bookIds[id] = bookList.length;
       bookList.push(data);
     }
   }
+  ipcMain.on('speedTxt', (ev, str: string) => {
+    speedTxt(str);
+  });
   ipcMain.on('openTxt', () => {
     dialog
       .showOpenDialog(win!, {
         properties: ['openFile', 'multiSelections'],
 
-        filters: [{ name: 'image', extensions: ['txt'] }]
+        filters: [{ name: 'txt', extensions: ['txt'] }]
       })
       .then(({ canceled, filePaths }) => {
-        if (!canceled) {
+        if (!canceled && filePaths.length) {
           for (let i = 0; i < filePaths.length; i++) {
             const item = filePaths[i];
             updateTxt(item);
@@ -121,22 +143,44 @@ function createWindow() {
         }
       });
   });
+  function transformCode(path: string) {
+    let buf = fs.readFileSync(path);
+    const result = jschardet.detect(buf);
 
+    if (result.encoding == 'GB2312') {
+      const txt = encodingConvert.convert(buf, 'UTF8', 'GB2312');
+      fs.writeFileSync(path, txt);
+      return txt.toString();
+    }
+
+    return buf.toString();
+  }
+  ipcMain.on('readedTxt', (ev, { id, chapter, index, total }) => {
+    const data = {
+      ...bookList[bookIds[id]],
+      index,
+      chapter,
+      total,
+      readTime: new Date().getTime()
+    };
+    bookList[bookIds[id]] = data;
+    saveBook();
+    setTimeout(() => {
+      win!.webContents.send('listTxt', bookList);
+    }, 500);
+  });
   ipcMain.on('getTxt', (ev, id: string) => {
     const data = bookList[bookIds[id]];
+
     if (fs.existsSync(data.path)) {
-      const txt = iconv.decode(fs.readFileSync(data.path), 'gb2312');
+      const txt = transformCode(data.path);
+      //iconv.decode(fs.readFileSync(data.path), 'gb2312');
       const lines = txt.replace(/\r/g, '').split('\n');
 
       let newTitle = '';
-      let title = '';
+      let title = data.name;
       let content: string[] = [];
-      const list: ChapterType[] = [
-        {
-          title: data.name,
-          content: []
-        }
-      ];
+      const list: ChapterType[] = [];
       function sliceContent(it: string) {
         const content = [];
         if (it.length <= lineNum && it) {
@@ -151,31 +195,32 @@ function createWindow() {
         }
         return content;
       }
-      lines.forEach((it) => {
+      lines.forEach((it: string) => {
+        let tag = true;
         if (
-          /(第{0,1}\s*[0-9一二三四五六七八九十]+\s*[章|节|回])|([0-9一二三四五六七八九十]+[\.|、])/.test(
+          /(第{0,1}\s*[0-9一二三四五六七八九十]+\s*章)|(第\s*[0-9一二三四五六七八九十]+\s*[节|回])|([0-9一二三四五六七八九十]+[\.|、])/.test(
             it
           )
         ) {
           newTitle = it;
+          tag = false;
         }
 
-        if (title != newTitle && content.length) {
+        if (newTitle && title != newTitle && content.length) {
           const t = title || data.name;
-
           content.unshift(...sliceContent(t));
-          content[0] = `<div class='chapter-title'>${content[0]}</div>`;
+          content[0] = `<div class='chapter-title'>${content[0].replace(/\s+/g, '')}</div>`;
           list.push({
             title: t,
             content: content
           });
           title = newTitle;
           content = [];
-        } else {
+        } else if (tag) {
           content.push(...sliceContent(it));
         }
       });
-      if (content) {
+      if (content.length) {
         list.push({
           title: title,
           content: content
@@ -188,6 +233,28 @@ function createWindow() {
       win!.webContents.send('listTxt', bookList);
     }
   });
+
+  ipcMain.on('delTxt', (ev, { map, type }) => {
+    let delData: BookType[] = [];
+    let newList: BookType[] = [];
+    bookList.forEach((item) => {
+      if (map[item.id]) {
+        delData.push(item);
+      } else {
+        newList.push(item);
+      }
+    });
+
+    if (type === 'file') {
+      for (let i = 0; i < delData.length; i++) {
+        fs.unlinkSync(delData[i].path);
+      }
+    }
+    bookList = newList;
+    saveBook();
+    win!.webContents.send('listTxt', bookList);
+  });
+
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {

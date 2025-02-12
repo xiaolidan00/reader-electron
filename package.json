@@ -9,10 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "encoding": "^0.1.13",
     "iconv-lite": "^0.6.3",
+    "jschardet": "^3.1.4",
+    "lodash-es": "^4.17.21",
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
     "@vitejs/plugin-vue": "^5.0.4",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",

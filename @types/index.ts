@@ -2,6 +2,7 @@ export type BookType = {
   id: string;
   name: string;
   chapter: number;
+  index: number;
   total: number;
   updateTime: number;
   importTime: number;

@@ -5,6 +5,7 @@ body,
   position: absolute;
   height: 100%;
   width: 100%;
+  overflow: hidden;
   color: var(--font);
 }
 :root {
@@ -16,7 +17,7 @@ body,
   src: url(msyh.ttf);
 }
 * {
-  box-sizing: border-box;
+  box-sizing: border-box !important;
   font-family: 'msyh';
 }
 .more-icon {
@@ -34,4 +35,53 @@ body,
 .book-icon {
   display: inline-block;
   content: url(book.svg);
+}
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.loading-icon {
+  display: inline-block;
+  content: url(loading.svg);
+  animation: rotating 1s linear infinite;
+}
+.listen-icon {
+  display: inline-block;
+  content: url(listen.svg);
+}
+.play-icon {
+  display: inline-block;
+  content: url(play.svg);
+}
+.pre-icon {
+  display: inline-block;
+  content: url(pre.svg);
+}
+.next-icon {
+  display: inline-block;
+  content: url(next.svg);
+}
+.stop-icon {
+  display: inline-block;
+  content: url(stop.svg);
+}
+::-webkit-scrollbar {
+  background-color: transparent;
+  height: 10px;
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+}
+.chapter-title {
+  font-weight: bold;
+  text-align: center;
+  white-space: wrap;
 }
