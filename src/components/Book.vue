@@ -283,7 +283,6 @@
       line-height: 30px;
 
       > div {
-        cursor: pointer;
         &:not(:last-child) {
           border-bottom: solid 1px rgba(0, 0, 0, 0.05);
         }
@@ -300,7 +299,7 @@
       text-align: center;
       > span {
         flex: 1;
-        cursor: pointer;
+
         display: inline-block;
         &.active {
           color: dodgerblue;
@@ -347,7 +346,7 @@
       > span {
         height: 50px;
         width: 50px;
-        cursor: pointer;
+
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
@@ -454,7 +453,7 @@
     padding: 0 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
-    cursor: pointer;
+
     &:not(:last-child) {
       border-bottom: solid 1px rgba(0, 0, 0, 0.05);
     }
@@ -479,7 +478,6 @@
     .back-icon {
       height: 20px;
       width: 20px;
-      cursor: pointer;
     }
   }
 </style>

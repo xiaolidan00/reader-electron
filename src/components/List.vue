@@ -3,9 +3,21 @@
   import { selectBook, dataList, bookItem, loading } from '../config';
   import { BookType } from '../../@types';
   import { cloneDeep } from 'lodash-es';
+  const detailSet = [
+    { name: '文件路径', prop: 'path' },
+    { name: '共有章节', prop: 'total' },
+    { name: '当前章节', prop: 'chapter', idx: true }
 
+    // { name: '最近阅读', prop: 'readTime'  }
+  ];
   let orginMap: { [n: string]: boolean } = {};
-  const state = reactive({ isEdit: false, checkMap: {}, isAll: false, searchKey: '' });
+  const state = reactive({
+    isEdit: false,
+    checkMap: {},
+    isAll: false,
+    searchKey: '',
+    isDetail: false
+  });
   const showDataList = computed(() => {
     const list = dataList.value;
     if (state.searchKey) {
@@ -15,6 +27,10 @@
   });
   const openTxt = () => {
     window.ipcRenderer.send('openTxt');
+  };
+  const onRightItem = (item: BookType) => {
+    state.isDetail = true;
+    bookItem.value = item;
   };
   const onReadTxt = (item: BookType) => {
     selectBook.value = item.id;
@@ -96,19 +112,58 @@
       <div class="book-top" v-if="state.isEdit">
         <i
           :class="['check', state.checkMap[item.id] ? 'active' : '']"
-          @click="onCheckItem(item)"
+          @click.self="onCheckItem(item)"
         ></i>
       </div>
 
-      <div class="book-cover" @click="onReadTxt(item)">
+      <div class="book-cover" @click.self="onReadTxt(item, $event)">
         {{ item.name }}
       </div>
-      <div class="book-detail">{{ item.chapter + 1 }}/{{ item.total }}</div>
+      <div class="book-detail" @click="onRightItem(item)">
+        <span>{{ item.chapter + 1 }}/{{ item.total }} </span>
+        <i class="more-icon"></i>
+      </div>
+    </div>
+  </div>
+  <div class="dialog-bg" v-if="state.isDetail && bookItem">
+    <div class="blank" @click="state.isDetail = false"></div>
+    <div class="dialog-body">
+      <div class="chapter-title">{{ bookItem.name }}</div>
+      <div>
+        <table>
+          <tr v-for="(item, idx) in detailSet" :key="idx">
+            <td>{{ item.name }}</td>
+            <td>{{ item.idx ? bookItem[item.prop] + 1 : bookItem[item.prop] }}</td>
+          </tr>
+        </table>
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+  .dialog-bg {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    .blank {
+      height: 10%;
+    }
+    .dialog-body {
+      height: 90%;
+      line-height: 40px;
+      border-radius: 10px 10px 0 0;
+      background-color: white;
+      padding: 20px;
+      td {
+        border-top: solid 1px rgba(0, 0, 0, 0.05);
+      }
+    }
+  }
   .check {
     height: 16px;
     width: 16px;
@@ -161,7 +216,6 @@
       padding: 0;
       font-size: 16px;
       padding: 0 20px;
-      cursor: pointer;
 
       &.active {
         color: sk;
@@ -186,7 +240,7 @@
     box-shadow: 0 0 10px #ccc;
     text-align: center;
     padding: 5px;
-    cursor: pointer;
+
     &:hover {
       transform: scale(1.1);
     }
@@ -209,8 +263,19 @@
       color: rgba(255, 255, 255, 0.5);
       font-size: 14px;
       display: flex;
+      height: 24px;
       align-items: center;
-      margin-top: 5px;
+
+      > span {
+        text-align: left;
+        display: inline-block;
+        flex: 1;
+      }
+      i {
+        height: 16px;
+        width: 16px;
+        opacity: 0.5;
+      }
     }
   }
 </style>
