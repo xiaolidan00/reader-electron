@@ -56,3 +56,4 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 - 要在管理员的命令行窗口执行`npm run build`
 - logo 图标一定要用 大小为 256x256 的 png/jpg/ico 图片，不能用 svg
 - css 使用图片资源地址`url(/aaa.svg)`
+- ipcRenderer.off 和 removeListener 调用会失败，没法注销事件监听，只能强行全部监听移除，这什么鬼 Bug

@@ -330,7 +330,13 @@
   let utterance: SpeechSynthesisUtterance;
   const onSpeak = async () => {
     await nextTick();
+
     if (state.isPlay) {
+      if (voiceList.length == 0 || !voiceList[state.voice]) {
+        alert('暂无TTS语音播报员，请在安装后使用');
+        state.isPlay = false;
+        return;
+      }
       const str = contenTxt.value!.innerText;
       if (voiceSet.txt != str) {
         speechSynthesis.cancel();
@@ -370,7 +376,7 @@
   });
   const showListen = () => {
     state.isListen = true;
-    voiceList = speechSynthesis.getVoices();
+    voiceList = speechSynthesis.getVoices() || [];
 
     state.voices = voiceList.map((it: any) => it.name);
   };
