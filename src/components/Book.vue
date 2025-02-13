@@ -380,11 +380,17 @@
 
     state.voices = voiceList.map((it: any) => it.name);
   };
+  const stopPlay = () => {
+    state.isPlay = false;
+    speechSynthesis.pause();
+  };
   onMounted(async () => {
     CSS.highlights.set(`search-highlight`, searchHighlight);
+    navigator.mediaDevices.addEventListener('devicechange', stopPlay);
   });
   onBeforeUnmount(() => {
     speechSynthesis.cancel();
+    navigator.mediaDevices.removeEventListener('devicechange', stopPlay);
   });
 </script>
 
@@ -535,6 +541,7 @@
     align-items: center;
     padding: 0 10px;
     i {
+      cursor: pointer;
       height: 20px;
       width: 20px;
       &:not(:last-child) {
@@ -606,6 +613,7 @@
     .back-icon {
       height: 20px;
       width: 20px;
+      cursor: pointer;
     }
   }
 </style>

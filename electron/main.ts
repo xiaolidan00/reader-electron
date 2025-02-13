@@ -132,6 +132,18 @@ function createWindow() {
   // ipcMain.on('speedTxt', (ev, str: string) => {
   //   speedTxt(str);
   // });
+
+  function openFiles(filePaths: string[]) {
+    for (let i = 0; i < filePaths.length; i++) {
+      const item = filePaths[i];
+      updateTxt(item);
+    }
+    saveBook();
+    win!.webContents.send('listTxt', bookList);
+  }
+  ipcMain.on('dragTxt', (ev, filePaths) => {
+    openFiles(filePaths);
+  });
   ipcMain.on('openTxt', () => {
     dialog
       .showOpenDialog(win!, {
@@ -141,12 +153,7 @@ function createWindow() {
       })
       .then(({ canceled, filePaths }) => {
         if (!canceled && filePaths.length) {
-          for (let i = 0; i < filePaths.length; i++) {
-            const item = filePaths[i];
-            updateTxt(item);
-          }
-          saveBook();
-          win!.webContents.send('listTxt', bookList);
+          openFiles(filePaths);
         }
       });
   });

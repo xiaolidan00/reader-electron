@@ -1,8 +1,9 @@
 <script setup lang="ts">
-  import { reactive, onBeforeUnmount, computed } from 'vue';
+  import { reactive, onBeforeUnmount, computed, onMounted } from 'vue';
   import { selectBook, dataList, bookItem, loading } from '../config';
   import { BookType } from '../../@types';
   import { cloneDeep } from 'lodash-es';
+
   const detailSet: Array<{ name: string; prop: keyof BookType; idx?: boolean }> = [
     { name: '文件路径', prop: 'path' },
     { name: '共有章节', prop: 'total' },
@@ -92,8 +93,40 @@
   };
   window.ipcRenderer.on('listTxt', refreshTxt);
   window.ipcRenderer.send('currentPage', 'list');
+  const onDragOver = (ev: DragEvent) => {
+    ev.preventDefault();
+  };
+  const onDropFile = (ev: DragEvent) => {
+    ev.preventDefault();
+    let fileList: string[] = [];
+    if (ev.dataTransfer?.items?.length) {
+      const items = ev.dataTransfer.items;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type === 'file') {
+          const f = item.getAsFile()!;
+          if (f.name.endsWith('.txt')) fileList.push(f.path);
+        }
+      }
+    }
+
+    if (fileList.length === 0 && ev.dataTransfer?.files?.length) {
+      fileList = Array.from(ev.dataTransfer.files)
+        .filter((it) => it.name.endsWith('.txt'))
+        .map((it) => it.path);
+    }
+    if (fileList.length) {
+      window.ipcRenderer.send('dragTxt', fileList);
+    }
+  };
+  onMounted(() => {
+    document.addEventListener('dragover', onDragOver);
+    document.addEventListener('drop', onDropFile);
+  });
   onBeforeUnmount(() => {
     window.ipcRenderer.off('listTxt', refreshTxt);
+    document.removeEventListener('dragover', onDragOver);
+    document.removeEventListener('drop', onDropFile);
   });
 </script>
 
@@ -190,6 +223,7 @@
   .tool-bar {
     height: 30px;
     padding: 0 10px;
+    cursor: pointer;
     & > span {
       height: 30px;
       line-height: 30px;
@@ -239,6 +273,7 @@
       color: white;
       font-weight: bold;
       font-size: 16px;
+      cursor: pointer;
     }
     .book-detail {
       color: rgba(255, 255, 255, 0.5);
@@ -256,6 +291,7 @@
         height: 16px;
         width: 16px;
         opacity: 0.5;
+        cursor: pointer;
       }
     }
   }
