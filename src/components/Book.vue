@@ -6,21 +6,16 @@
       {{ state.chapter + 1 }} /{{ chapterList.length }}
     </div>
 
-    <div class="book-container">
-      <!-- <div v-for="(it, idx) in state.showContent" :key="idx" v-html="it"></div> -->
+    <div class="book-container" @mousedown.stop="onDown" @mouseup.stop="onPageAction">
       <div class="chapter-title" v-if="chapterList.length && state.index == 0">
         {{ chapterList[state.chapter].title }}
       </div>
       <div class="book-content" ref="contenTxt" v-html="state.showContent"></div>
-      <div class="slide">
-        <div class="left" @click="prePage()"></div>
-        <div class="mid" @click="state.isMenu = true"></div>
-        <div class="right" @click="nextPage()"></div>
-      </div>
     </div>
     <div class="book-bottom">
       <i class="book-icon" @click="state.isMenu = true"></i>
       <i class="listen-icon" @click="showListen()"></i>
+      <i class="search-icon" @click="state.isSearch = true"></i>
     </div>
   </div>
   <div class="book-nav" v-if="state.isMenu">
@@ -85,15 +80,45 @@
       </div>
     </div>
   </div>
+  <div class="search-page" v-show="state.isSearch">
+    <div class="blank" @click="state.isSearch = false"></div>
+    <div class="search-body">
+      <div class="search-box">
+        <div class="search">
+          <input
+            placeholder="搜索关键词"
+            type="text"
+            v-model="state.searchKey"
+            @change="onSearch()"
+          />
+          <i class="search-icon" @click="onSearch()"></i>
+        </div>
+      </div>
+
+      <div class="empty" v-show="state.searchKey && state.searchResult.length == 0">
+        暂无搜索结果
+      </div>
+      <div class="search-list" ref="searchList">
+        <div
+          @click="onSearhItem(item)"
+          v-for="(item, i) in state.searchResult"
+          :key="i"
+          v-html="item.content"
+        ></div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
   import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue';
   import type { ChapterType } from '../../@types';
   import { selectBook, loading, bookItem } from '../config';
-
+  const searchHighlight = new Highlight();
   const contenTxt = ref<HTMLDivElement>();
+  const searchList = ref<HTMLDivElement>();
   const PageNum = 21;
+  const LineNum = 24;
   const speeds = [
     { name: '0.5X', value: 0.5 },
     { name: '1.0X', value: 1 },
@@ -115,10 +140,13 @@
     detail: [],
     showContent: '',
     total: 0,
-    line: 0,
+
     speed: Number(localStorage.getItem('speed')) || 1,
     isPlay: false,
-    isListen: false
+    isListen: false,
+    isSearch: false,
+    searchKey: '',
+    searchResult: []
   });
   const updateBook = () => {
     window.ipcRenderer.send('readedTxt', {
@@ -128,6 +156,57 @@
       total: chapterList.value.length
     });
   };
+  type SeachItemType = {
+    content: string;
+    chapter: number;
+    index: number;
+    start: number;
+  };
+  let searchLen = 0;
+  function setHighlight(start: number, textNode: Node) {
+    const range = new Range();
+
+    range.setStart(textNode, start);
+    range.setEnd(textNode, start + searchLen);
+    searchHighlight.add(range);
+  }
+  const onSearch = async () => {
+    const list: SeachItemType[] = [];
+    if (state.searchKey) {
+      const s = state.searchKey + '';
+      chapterList.value.forEach((it, c) => {
+        const t = Math.ceil(it.title.length / LineNum);
+
+        it.content.forEach((item, idx) => {
+          const start = item.indexOf(s);
+
+          if (start >= 0) {
+            list.push({ content: item, chapter: c, start, index: Math.floor((idx + t) / PageNum) });
+          }
+        });
+      });
+    }
+    state.searchResult = list;
+    await nextTick();
+    if (state.searchKey) {
+      searchLen = state.searchKey.length;
+      const ch = searchList.value!.children;
+      for (let i = 0; i < list.length; i++) {
+        const textNode = ch[i].firstChild!;
+        const item = list[i];
+        setHighlight(item.start, textNode);
+      }
+    }
+  };
+  const onSearhItem = async (item: SeachItemType) => {
+    state.index = item.index;
+    state.chapter = item.chapter;
+    onChapter(item.chapter, 2);
+    state.isSearch = false;
+    await nextTick();
+    const textNode = contenTxt.value!.firstChild!;
+    setHighlight(textNode.textContent!.indexOf(state.searchKey), textNode);
+  };
   const onBack = () => {
     updateBook();
     selectBook.value = '';
@@ -135,6 +214,7 @@
     state.isMenu = false;
     state.isListen = false;
     state.isPlay = false;
+    state.isSearch = false;
   };
   const chapterList = ref<ChapterType[]>([]);
   const preChapter = () => {
@@ -158,6 +238,30 @@
       onChapter(state.chapter - 1, 1);
     }
   };
+  let isMove = 0;
+  const onDown = (event: MouseEvent) => {
+    isMove = event.pageX;
+  };
+
+  const onPageAction = (event: MouseEvent) => {
+    const x = event.pageX;
+    if (Math.abs(isMove - x) <= 10) {
+      const w = window.innerWidth;
+
+      if (x >= 0 && x <= w * 0.45) {
+        console.log('left');
+        prePage();
+      } else if (x >= 0.55 * w && x <= w) {
+        console.log('right');
+        nextPage();
+      } else {
+        console.log('mid');
+        state.isMenu = true;
+      }
+    }
+
+    isMove = 0;
+  };
   const changeIndex = () => {
     getPage();
     onSpeak();
@@ -172,16 +276,12 @@
     const a = state.index * PageNum - titleLine;
     const b = (state.index + 1) * PageNum - titleLine;
     state.showContent = state.detail.slice(a < 0 ? 0 : a, b).join('');
-    // console.log(state.showContent);
   };
   const onChapter = (i: number, type: 0 | 1 | 2) => {
     if (type !== 2) state.chapter = i;
-    // console.log(state.chapter, state.index);
-
     state.isMenu = false;
-
     const t: ChapterType = chapterList.value[state.chapter];
-    titleLine = Math.ceil(t.title.length / 24);
+    titleLine = Math.ceil(t.title.length / LineNum);
     console.log('titleLine', titleLine);
     state.detail = t.content;
     state.total = Math.ceil((t.content.length + titleLine) / PageNum);
@@ -263,7 +363,7 @@
     state.voices = voiceList.map((it: any) => it.name);
   };
   onMounted(async () => {
-    await nextTick();
+    CSS.highlights.set(`search-highlight`, searchHighlight);
   });
   onBeforeUnmount(() => {
     speechSynthesis.cancel();
@@ -271,6 +371,34 @@
 </script>
 
 <style scoped lang="scss">
+  .search-page {
+    height: 100%;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100%;
+    z-index: 3;
+    .search-body {
+      border-radius: 10px 10px 0 0;
+      height: 90%;
+      background-color: var(--bg);
+    }
+    .search-list {
+      height: calc(100% - 50px);
+      padding: 0px 10px 10px 10px;
+      overflow: hidden auto;
+
+      > div {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        &:not(:last-child) {
+          border-bottom: solid 1px rgba(0, 0, 0, 0.05);
+        }
+      }
+    }
+  }
   .listen-page {
     height: 100%;
     position: fixed;
@@ -368,25 +496,7 @@
     display: flex;
     flex-direction: column;
   }
-  .slide {
-    height: calc(100% - 90px);
-    width: 100%;
-    position: fixed;
-    top: 50px;
-    bottom: 40px;
-    display: flex;
-    .mid {
-      width: 10%;
-      height: 100%;
-      display: inline-block;
-    }
-    .left,
-    .right {
-      flex: 1;
-      height: 100%;
-      display: inline-block;
-    }
-  }
+
   .book-container {
     height: calc(100% - 90px);
     text-align: left;

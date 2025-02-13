@@ -179,33 +179,7 @@
       content: url(/check.svg);
     }
   }
-  .search-box {
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    & > .search {
-      flex: 1;
-      border-radius: 20px;
-      border: solid 1px #ccc;
-      display: flex;
-      height: 30px;
-      align-items: center;
-      padding: 0 10px;
-    }
 
-    input {
-      flex: 1;
-
-      border: none;
-      background-color: transparent;
-      text-align: center;
-      outline: none;
-    }
-    i {
-      width: 20px;
-      height: 20px;
-    }
-  }
   .tool-bar {
     height: 30px;
     padding: 0 10px;
