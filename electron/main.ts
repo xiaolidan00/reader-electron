@@ -220,7 +220,7 @@ function createWindow() {
       function sliceContent(it: string) {
         const content = [];
         it = it.replace(/\s+/g, '');
-        if (it.length + 2 <= lineNum && it) {
+        if (it.length + 3 <= lineNum && it) {
           content.push('\t' + it + '\n');
         } else {
           it = '\t' + it;
@@ -229,7 +229,7 @@ function createWindow() {
           for (let i = 0; i < it.length; i++) {
             const s = it[i];
             if (s == '\t') {
-              count += 2;
+              count += 3;
             } else {
               count++;
             }
@@ -266,11 +266,11 @@ function createWindow() {
           return /\s+[0-9一二三四五六七八九十零百千万]+\./;
         } else if (/\s+[0-9一二三四五六七八九十零百千万]+、/.test(s)) {
           return /\s+[0-9一二三四五六七八九十零百千万]+、/;
+        } else if (/\s+[0-9]+/.test(s)) {
+          return /\s+[0-9]+/;
         } else if (/[\(|（][0-9]+[\)|）]/.test(s)) {
           return /[\(|（][0-9]+[\)|）]/;
-        } else if (/[0-9]+/.test(s)) {
-          return /\s+[0-9]+/;
-        } else if (/[一二三四五六七八九十零百千万]+/.test(s)) {
+        } else if (/\s+[一二三四五六七八九十零百千万]+/.test(s)) {
           return /\s+[一二三四五六七八九十零百千万]+/;
         } else {
           return /\s+.{1,10}/;
