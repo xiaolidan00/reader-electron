@@ -27,7 +27,7 @@
           :class="['nav-item', state.chapter == idx ? 'active' : '']"
           v-for="(item, idx) in chapterList"
           :key="idx"
-          @click="onChapter(idx)"
+          @click="onChapter(idx, 0)"
         >
           {{ item.title }}
         </div>
@@ -129,8 +129,30 @@
   ];
   loading.value = true;
   let voiceList: any = [];
-
-  const state = reactive({
+  type SeachItemType = {
+    content: string;
+    chapter: number;
+    index: number;
+    start: number;
+  };
+  type StateType = {
+    searchResult: SeachItemType[];
+    voice: number;
+    voices: string[];
+    title: string;
+    isMenu: boolean;
+    isPlay: boolean;
+    isListen: boolean;
+    isSearch: boolean;
+    chapter: number;
+    index: number;
+    total: number;
+    showContent: string;
+    searchKey: string;
+    speed: number;
+    detail: string[];
+  };
+  const state = reactive<StateType>({
     voice: Number(localStorage.getItem('voice')) || 0,
     voices: [],
     title: bookItem.value!.name,
@@ -156,12 +178,7 @@
       total: chapterList.value.length
     });
   };
-  type SeachItemType = {
-    content: string;
-    chapter: number;
-    index: number;
-    start: number;
-  };
+
   let searchLen = 0;
   function setHighlight(start: number, textNode: Node) {
     const range = new Range();

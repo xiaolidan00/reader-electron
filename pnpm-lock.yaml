@@ -4,9 +4,6 @@ dependencies:
   encoding:
     specifier: ^0.1.13
     version: 0.1.13
-  iconv-lite:
-    specifier: ^0.6.3
-    version: 0.6.3
   jschardet:
     specifier: ^3.1.4
     version: 3.1.4

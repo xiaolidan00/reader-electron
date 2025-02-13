@@ -9,6 +9,8 @@ import fs from 'node:fs';
 import jschardet from 'jschardet';
 import path from 'node:path';
 
+//@ts-ignore
+
 // import { spawn } from 'child_process';
 
 // import iconv from 'iconv-lite';

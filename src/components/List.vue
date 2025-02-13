@@ -3,7 +3,7 @@
   import { selectBook, dataList, bookItem, loading } from '../config';
   import { BookType } from '../../@types';
   import { cloneDeep } from 'lodash-es';
-  const detailSet = [
+  const detailSet: Array<{ name: string; prop: keyof BookType; idx?: boolean }> = [
     { name: '文件路径', prop: 'path' },
     { name: '共有章节', prop: 'total' },
     { name: '当前章节', prop: 'chapter', idx: true }
@@ -11,7 +11,14 @@
     // { name: '最近阅读', prop: 'readTime'  }
   ];
   let orginMap: { [n: string]: boolean } = {};
-  const state = reactive({
+  type StateType = {
+    isEdit: boolean;
+    checkMap: { [n: string]: boolean };
+    isAll: boolean;
+    searchKey: string;
+    isDetail: boolean;
+  };
+  const state = reactive<StateType>({
     isEdit: false,
     checkMap: {},
     isAll: false,
@@ -116,7 +123,7 @@
         ></i>
       </div>
 
-      <div class="book-cover" @click.self="onReadTxt(item, $event)">
+      <div class="book-cover" @click.self="onReadTxt(item)">
         {{ item.name }}
       </div>
       <div class="book-detail" @click="onRightItem(item)">
@@ -133,7 +140,7 @@
         <table>
           <tr v-for="(item, idx) in detailSet" :key="idx">
             <td>{{ item.name }}</td>
-            <td>{{ item.idx ? bookItem[item.prop] + 1 : bookItem[item.prop] }}</td>
+            <td>{{ item.idx ? (bookItem[item.prop] as number) + 1 : bookItem[item.prop] }}</td>
           </tr>
         </table>
       </div>
