@@ -51,7 +51,7 @@ function createWindow() {
     autoHideMenuBar: true,
     // closable: false,
     resizable: false,
-    minimizable: false,
+    // minimizable: false,
     icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs')
@@ -188,7 +188,6 @@ function createWindow() {
       win!.webContents.send('closeBook');
       ipcMain.once('closedBook', (ev, { id, chapter, index, total }) => {
         readedBook({ id, chapter, index, total });
-        console.log('colsed book', { id, chapter, index, total });
         setTimeout(() => {
           win!.destroy();
         }, 500);
@@ -210,6 +209,7 @@ function createWindow() {
 
     if (fs.existsSync(data.path)) {
       const txt = transformCode(data.path);
+      const first1000 = txt.substring(0, 3000);
       //iconv.decode(fs.readFileSync(data.path), 'gb2312');
       const lines = txt.replace(/\r/g, '').split('\n');
 
@@ -219,35 +219,77 @@ function createWindow() {
       const list: ChapterType[] = [];
       function sliceContent(it: string) {
         const content = [];
-        if (it.length <= lineNum && it) {
-          content.push(it);
+        it = it.replace(/\s+/g, '');
+        if (it.length + 2 <= lineNum && it) {
+          content.push('\t' + it + '\n');
         } else {
-          for (let i = 0; i < it.length; i = i + lineNum) {
-            const s = it.substring(i, i + lineNum);
-            if (s) {
-              content.push(s);
+          it = '\t' + it;
+          let count = 0;
+          let ss = '';
+          for (let i = 0; i < it.length; i++) {
+            const s = it[i];
+            if (s == '\t') {
+              count += 2;
+            } else {
+              count++;
+            }
+            ss += s;
+
+            if (count == lineNum || i == it.length - 1) {
+              content.push(ss);
+              count = 0;
+              ss = '';
             }
           }
+          content[content.length - 1] += '\n';
         }
         return content;
       }
+      function getRegex(s: string) {
+        if (/第\s*[0-9]+\s*章/.test(s)) {
+          return /第\s*[0-9]+\s*章/;
+        } else if (/第\s*[一二三四五六七八九十零百千万]+\s*章/.test(s)) {
+          return /第\s*[一二三四五六七八九十零百千万]+\s*章/;
+        } else if (/\s*[0-9]+\s*章/.test(s)) {
+          return /\s*[0-9]+\s*章/;
+        } else if (/\s*[一二三四五六七八九十零百千万]+\s*章/.test(s)) {
+          return /\s*[一二三四五六七八九十零百千万]+\s*章/;
+        } else if (/第\s*[0-9]+\s*节/.test(s)) {
+          return /第\s*[0-9]+\s*节/;
+        } else if (/第\s*[一二三四五六七八九十零百千万]+\s*节/.test(s)) {
+          return /第\s*[一二三四五六七八九十零百千万]+\s*节/;
+        } else if (/第\s*[0-9]+\s*回/.test(s)) {
+          return /第\s*[0-9]+\s*回/;
+        } else if (/第\s*[一二三四五六七八九十零百千万]+\s*回/.test(s)) {
+          return /第\s*[一二三四五六七八九十零百千万]+\s*回/;
+        } else if (/\s+[0-9一二三四五六七八九十零百千万]+\./.test(s)) {
+          return /\s+[0-9一二三四五六七八九十零百千万]+\./;
+        } else if (/\s+[0-9一二三四五六七八九十零百千万]+、/.test(s)) {
+          return /\s+[0-9一二三四五六七八九十零百千万]+、/;
+        } else if (/[\(|（][0-9]+[\)|）]/.test(s)) {
+          return /[\(|（][0-9]+[\)|）]/;
+        } else if (/[0-9]+/.test(s)) {
+          return /\s+[0-9]+/;
+        } else if (/[一二三四五六七八九十零百千万]+/.test(s)) {
+          return /\s+[一二三四五六七八九十零百千万]+/;
+        } else {
+          return /\s+.{1,10}/;
+        }
+      }
+      const zhangjie = getRegex(first1000);
       lines.forEach((it: string) => {
         let tag = true;
-        if (
-          /(第{0,1}\s*[0-9一二三四五六七八九十]+\s*章)|(第\s*[0-9一二三四五六七八九十]+\s*[节|回])|([0-9一二三四五六七八九十]+[\.|、])/.test(
-            it
-          )
-        ) {
+        if (zhangjie.test(it)) {
           newTitle = it;
           tag = false;
         }
 
         if (newTitle && title != newTitle && content.length) {
           const t = title || data.name;
-          content.unshift(...sliceContent(t));
-          content[0] = `<div class='chapter-title'>${content[0].replace(/\s+/g, '')}</div>`;
+          // content.unshift(...sliceContent(t));
+          // content[0] = `<div class='chapter-title'>${content[0].replace(/\s+/g, '')}</div>`;
           list.push({
-            title: t,
+            title: t.replace(/\s+/g, ''),
             content: content
           });
           title = newTitle;

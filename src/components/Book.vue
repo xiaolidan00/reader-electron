@@ -7,9 +7,11 @@
     </div>
 
     <div class="book-container">
-      <div class="book-content" ref="contenTxt">
-        <div v-for="(it, idx) in state.showContent" :key="idx" v-html="it"></div>
+      <!-- <div v-for="(it, idx) in state.showContent" :key="idx" v-html="it"></div> -->
+      <div class="chapter-title" v-if="chapterList.length && state.index == 0">
+        {{ chapterList[state.chapter].title }}
       </div>
+      <div class="book-content" ref="contenTxt" v-html="state.showContent"></div>
       <div class="slide">
         <div class="left" @click="prePage()"></div>
         <div class="mid" @click="state.isMenu = true"></div>
@@ -91,7 +93,7 @@
   import { selectBook, loading, bookItem } from '../config';
 
   const contenTxt = ref<HTMLDivElement>();
-  const PageNum = 18;
+  const PageNum = 21;
   const speeds = [
     { name: '0.5X', value: 0.5 },
     { name: '1.0X', value: 1 },
@@ -111,7 +113,7 @@
     chapter: bookItem.value!.chapter,
     index: bookItem.value!.index,
     detail: [],
-    showContent: [],
+    showContent: '',
     total: 0,
     line: 0,
     speed: Number(localStorage.getItem('speed')) || 1,
@@ -143,7 +145,7 @@
   const nextPage = () => {
     if (state.index + 1 < state.total) {
       state.index++;
-      getPage();
+      changeIndex();
     } else if (state.chapter < chapterList.value.length) {
       onChapter(state.chapter + 1, 0);
     }
@@ -151,7 +153,7 @@
   const prePage = () => {
     if (state.index - 1 >= 0) {
       state.index--;
-      getPage();
+      changeIndex();
     } else if (state.chapter - 1 >= 0) {
       onChapter(state.chapter - 1, 1);
     }
@@ -165,21 +167,24 @@
       onChapter(state.chapter + 1, 0);
     }
   };
+  let titleLine = 0;
   const getPage = () => {
-    const a = state.index * PageNum;
-    const b = (state.index + 1) * PageNum;
-    state.showContent = state.detail.slice(a, b);
+    const a = state.index * PageNum - titleLine;
+    const b = (state.index + 1) * PageNum - titleLine;
+    state.showContent = state.detail.slice(a < 0 ? 0 : a, b).join('');
+    // console.log(state.showContent);
   };
   const onChapter = (i: number, type: 0 | 1 | 2) => {
     if (type !== 2) state.chapter = i;
-    console.log(state.chapter, state.index);
+    // console.log(state.chapter, state.index);
 
     state.isMenu = false;
 
     const t: ChapterType = chapterList.value[state.chapter];
-
+    titleLine = Math.ceil(t.title.length / 24);
+    console.log('titleLine', titleLine);
     state.detail = t.content;
-    state.total = Math.ceil(t.content.length / PageNum);
+    state.total = Math.ceil((t.content.length + titleLine) / PageNum);
     if (type === 1) {
       state.index = state.total - 1;
     } else if (type === 2) {
@@ -196,37 +201,33 @@
   const selectVoice = (i: number) => {
     state.voice = i;
     localStorage.setItem('voice', i + '');
-    onSpeak();
+    if (state.isPlay) onSpeak();
   };
   const onSpeed = (i: number) => {
     state.speed = i;
     localStorage.setItem('speed', i + '');
-    onSpeak();
+    if (state.isPlay) onSpeak();
   };
   const onPlay = () => {
     state.isPlay = !state.isPlay;
     onSpeak();
   };
   const voiceSet = {
-    speed: 1,
-    txt: '',
-    voice: 0
+    txt: ''
   };
   let utterance: SpeechSynthesisUtterance;
   const onSpeak = async () => {
     await nextTick();
     if (state.isPlay) {
       const str = contenTxt.value!.innerText;
-      if (voiceSet.txt != str || voiceSet.speed != state.speed || voiceSet.voice != state.voice) {
+      if (voiceSet.txt != str) {
         speechSynthesis.cancel();
-        const t = new SpeechSynthesisUtterance(str);
+        const t = new SpeechSynthesisUtterance(str.replace(/_-\+=/g, ''));
         t.voice = voiceList[state.voice];
         t.rate = state.speed;
         t.volume = 100;
         speechSynthesis.speak(t);
         voiceSet.txt = str;
-        voiceSet.speed = state.speed + 0;
-        voiceSet.voice = state.voice + 0;
         utterance = t;
         t.onend = () => {
           nextPage();
@@ -389,11 +390,13 @@
   }
   .book-container {
     height: calc(100% - 90px);
+    text-align: left;
+    line-height: 1.5;
+    font-size: 18px;
   }
   .book-content {
     height: 100%;
-    line-height: 32px;
-    font-size: 18px;
+
     padding: 10px;
     overflow: hidden;
     white-space: pre-wrap;
