@@ -247,19 +247,14 @@
     const x = event.pageX;
     if (Math.abs(isMove - x) <= 10) {
       const w = window.innerWidth;
-
       if (x >= 0 && x <= w * 0.45) {
-        console.log('left');
         prePage();
       } else if (x >= 0.55 * w && x <= w) {
-        console.log('right');
         nextPage();
       } else {
-        console.log('mid');
         state.isMenu = true;
       }
     }
-
     isMove = 0;
   };
   const changeIndex = () => {
@@ -282,7 +277,7 @@
     state.isMenu = false;
     const t: ChapterType = chapterList.value[state.chapter];
     titleLine = Math.ceil(t.title.length / LineNum);
-    console.log('titleLine', titleLine);
+
     state.detail = t.content;
     state.total = Math.ceil((t.content.length + titleLine) / PageNum);
     if (type === 1) {
