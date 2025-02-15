@@ -58,6 +58,15 @@ function updateTxt(item: string) {
     bookList.push(data);
   }
 }
+let isLock = false;
+const sendList = () => {
+  if (isLock) return;
+  isLock = true;
+  win!.webContents.send('listTxt', bookList);
+  setTimeout(() => {
+    isLock = false;
+  }, 1000);
+};
 
 export function openFiles(ev: any, filePaths: string[]) {
   for (let i = 0; i < filePaths.length; i++) {
@@ -65,7 +74,7 @@ export function openFiles(ev: any, filePaths: string[]) {
     updateTxt(item);
   }
   saveBook();
-  win!.webContents.send('listTxt', bookList);
+  sendList();
 }
 
 export const firstLoad = () => {
@@ -74,7 +83,7 @@ export const firstLoad = () => {
     bookList = JSON.parse(books) as BookType[];
     updateBookIds();
   }
-  win?.webContents.send('listTxt', bookList);
+  sendList();
 };
 export const openTxt = () => {
   dialog
@@ -155,9 +164,10 @@ function getRegex(s: string): RegExp {
 }
 
 function sliceContent(it: string) {
-  const content = [];
+  it = it.trim();
   //   it = it.replace(/\s+/g, '');
   if (!it) return [];
+  const content = [];
   if (it.length + 3 <= LineNum && it) {
     content.push('\t' + it + '\n');
   } else {
@@ -194,9 +204,12 @@ export const changeRegex = (
   getTxt(null, id);
 };
 const delOneTxt = (id: string) => {
+  console.log('delOneTxt');
   bookList.splice(bookIds[id], 1);
   updateBookIds();
-  win!.webContents.send('listTxt', bookList);
+  win!.webContents.send('backList');
+  currentPage = 'list';
+  sendList();
 };
 export const getTxt = (ev: any, id: string) => {
   const data = bookList[bookIds[id]];
@@ -261,7 +274,7 @@ export const delTxt = (ev: any, { map, type }: { map: { [n: string]: boolean }; 
   }
   bookList = newList;
   saveBook();
-  win!.webContents.send('listTxt', bookList);
+  sendList();
 };
 
 export const readedTxt = (
@@ -270,6 +283,6 @@ export const readedTxt = (
 ) => {
   readedBook({ id, chapter, index, total });
   setTimeout(() => {
-    win!.webContents.send('listTxt', bookList);
+    sendList();
   }, 500);
 };

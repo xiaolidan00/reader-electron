@@ -81,7 +81,10 @@
     }
   };
 
+  let isLock = false;
   const refreshTxt = (_event: any, data: any) => {
+    if (isLock) return;
+    isLock = true;
     console.log('refreshTxt');
     dataList.value = data;
     orginMap = {};
@@ -90,6 +93,9 @@
     });
     state.checkMap = cloneDeep(orginMap);
     loading.value = false;
+    setTimeout(() => {
+      isLock = false;
+    }, 1000);
   };
   window.ipcRenderer.on('listTxt', refreshTxt);
   window.ipcRenderer.send('currentPage', 'list');

@@ -6,7 +6,12 @@
       {{ currentChapter + 1 }} /{{ chapterList.length }}
     </div>
 
-    <div class="book-container" @mousedown.stop="onDown" @mouseup.stop="onPageAction">
+    <div
+      class="book-container"
+      id="bookContainer"
+      @mousedown.stop="onDown"
+      @mouseup.stop="onPageAction"
+    >
       <div class="chapter-title" v-if="chapterList.length && currentIndex == 0">
         {{ chapterList[currentChapter]?.title }}
       </div>
@@ -51,6 +56,7 @@
     currentChapter,
     currentIndex
   } from '../config';
+  import { onMounted } from 'vue';
 
   //<InstanceType<typeof ListenPage>>
   const listenRef = ref();
@@ -219,12 +225,20 @@
   const onSaveTxt = () => {
     const fileName = bookItem.value!.name + '（带章节目录）.txt';
     let txt = '';
-    chapterList.value.forEach((it: ChapterType, i: number) => {
-      txt += `第${i + 1}章 ` + it.title + '\n';
+    const t0 = chapterList.value[0];
+    txt += t0.title;
+    txt += t0.content.join('');
+    for (let i = 1; i < chapterList.value.length; i++) {
+      const it = chapterList.value[i];
+      let t = it.title;
+      if (/\s*第\s*[0-9]+\s*章/.test(t)) {
+        t = t.replace(/\s*第\s*[0-9]+\s*章/g, '');
+      }
+      txt += `第${i}章 ` + t + '\n';
       txt += it.content.join('');
-    });
-    const file = new File([txt], fileName, { type: 'text/plain' });
+    }
 
+    const file = new File([txt], fileName, { type: 'text/plain' });
     const dom = document.createElement('a');
     dom.download = fileName;
     dom.href = window.URL.createObjectURL(file);
@@ -238,13 +252,25 @@
   });
   window.ipcRenderer.send('currentPage', 'book');
 
-  window.ipcRenderer.once('closeBook', () => {
+  const backList = () => {
+    loading.value = false;
+    console.log('TXT DELETE');
+    selectBook.value = '';
+    alert('TXT已删除，不可阅读！');
+  };
+  window.ipcRenderer.on('backList', backList);
+  const closeBook = () => {
     window.ipcRenderer.send('closedBook', {
       id: selectBook.value + '',
       chapter: currentChapter.value,
       index: currentIndex.value,
       total: chapterList.value.length
     });
+  };
+  window.ipcRenderer.on('closeBook', closeBook);
+  onBeforeUnmount(() => {
+    window.ipcRenderer.off('closeBook', closeBook);
+    window.ipcRenderer.off('backList', backList);
   });
 </script>
 

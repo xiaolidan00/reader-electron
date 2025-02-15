@@ -134,7 +134,7 @@
     await nextTick();
 
     if (state.isPlay) {
-      const contenTxt = document.getElementById('contenTxt')!;
+      const contenTxt = document.getElementById('bookContainer')!;
       const str = contenTxt.innerText;
       if (voiceSet.txt != str) {
         speechSynthesis.cancel();
