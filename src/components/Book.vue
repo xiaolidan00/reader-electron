@@ -56,7 +56,6 @@
     currentChapter,
     currentIndex
   } from '../config';
-  import { onMounted } from 'vue';
 
   //<InstanceType<typeof ListenPage>>
   const listenRef = ref();
@@ -247,9 +246,7 @@
   };
   updateBook();
   window.ipcRenderer.on('readTxt', onReadTxt);
-  onBeforeUnmount(() => {
-    window.ipcRenderer.off('readTxt', onReadTxt);
-  });
+
   window.ipcRenderer.send('currentPage', 'book');
 
   const backList = () => {
@@ -269,6 +266,7 @@
   };
   window.ipcRenderer.on('closeBook', closeBook);
   onBeforeUnmount(() => {
+    window.ipcRenderer.off('readTxt', onReadTxt);
     window.ipcRenderer.off('closeBook', closeBook);
     window.ipcRenderer.off('backList', backList);
   });
