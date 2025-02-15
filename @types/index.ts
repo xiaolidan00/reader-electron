@@ -11,6 +11,7 @@ export type BookType = {
   group: string;
   disable?: boolean;
   size: number;
+  regexType?: number;
   regex?: string;
 };
 export type ChapterType = {

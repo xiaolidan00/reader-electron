@@ -17,19 +17,24 @@
         <tr>
           <td>章节匹配</td>
           <td>
-            <select v-model="state.regex" @change="onRegex">
-              <option value="">自动识别</option>
-              <option v-for="(item, idx) in chapterRegex" :key="idx" :value="item.value">
+            <select v-model="state.regexType" @change="onRegex">
+              <option :value="-1">自动识别</option>
+              <option v-for="(item, idx) in chapterRegex" :key="idx" :value="idx">
                 {{ item.name }}
               </option>
-              <option value="custom">自定义</option>
+              <option :value="-2">自定义</option>
             </select>
           </td>
         </tr>
         <tr>
           <td>正则表达式</td>
           <td>
-            <input v-model="state.regex1" @change="onRegex" type="text" />
+            <input
+              v-model="state.regex"
+              :disabled="state.regexType != -2"
+              @change="onRegex"
+              type="text"
+            />
           </td>
         </tr>
       </table>
@@ -43,14 +48,13 @@
   import { bookItem, selectBook } from '../config';
   import { reactive } from 'vue';
   import { onMounted } from 'vue';
-  const rr = bookItem.value!.regex;
-  const r = chapterRegex.find((a) => a.value == rr);
+
   const state = reactive({
-    regex: rr || '',
+    regexType: bookItem.value!.regexType ?? -1,
     fontSize: Number(localStorage.getItem('fontSize')) || 18,
     fontColor: localStorage.getItem('fontColor') || '#505050',
     bg: localStorage.getItem('bg') || '#faebd7',
-    regex1: !r ? bookItem.value!.regex : ''
+    regex: bookItem.value!.regex || ''
   });
   withDefaults(
     defineProps<{
@@ -67,13 +71,16 @@
   //     document.documentElement.style.setProperty('--fontSize', state.fontSize + 'px');
   //   };
   const onRegex = () => {
-    if (state.regex == 'custom') {
-      bookItem.value!.regex = state.regex1;
-      window.ipcRenderer.send('chapterRegex', { id: selectBook.value, regex: state.regex1 });
-    } else {
-      bookItem.value!.regex = state.regex;
-      window.ipcRenderer.send('chapterRegex', { id: selectBook.value, regex: state.regex });
+    bookItem.value!.regexType = state.regexType;
+    if (state.regexType >= 0) {
+      state.regex = chapterRegex[state.regexType].value;
     }
+
+    window.ipcRenderer.send('chapterRegex', {
+      id: selectBook.value,
+      regex: state.regex,
+      regexType: state.regexType
+    });
   };
   const onFontColor = () => {
     localStorage.setItem('fontColor', state.fontColor);

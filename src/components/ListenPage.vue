@@ -138,7 +138,7 @@
       const str = contenTxt.innerText;
       if (voiceSet.txt != str) {
         speechSynthesis.cancel();
-        const t = new SpeechSynthesisUtterance(str.replace(/_-\+=/g, ''));
+        const t = new SpeechSynthesisUtterance(str.replace(/[\_\-\+=\*]+/g, ''));
         t.voice = voiceList[state.voice];
         t.rate = state.speed;
         t.volume = 100;

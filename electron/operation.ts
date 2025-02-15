@@ -42,7 +42,8 @@ function updateTxt(item: string) {
     importTime: new Date().getTime(),
     readTime: new Date().getTime(),
     path: item,
-    group: ''
+    group: '',
+    regexType: -1
   };
   if (bookIds[id] > 0) {
     const before = bookList[bookIds[id]];
@@ -139,7 +140,6 @@ export const onClose = (ev: any) => {
   }
 };
 
-export const setChapterRegex = (ev: any, r: string) => {};
 export const setCurrentPage = (ev: any, page: string) => {
   currentPage = page;
 };
@@ -183,16 +183,19 @@ function sliceContent(it: string) {
   }
   return content;
 }
-export const changeRegex = (ev: any, { regex, id }: { regex: string; id: string }) => {
+export const changeRegex = (
+  ev: any,
+  { regex, id, regexType }: { regexType: number; regex: string; id: string }
+) => {
   const data = bookList[bookIds[id]];
-
-  if (regex) {
-    data.regex = regex;
-  } else {
+  data.regexType = regexType;
+  if (regexType == -1) {
     data.regex = undefined;
+  } else {
+    data.regex = regex;
   }
-
-  console.log(bookList[bookIds[id]]);
+  console.log(regex);
+  bookList[bookIds[id]] = data;
   fs.writeFileSync(BOOKLIST, JSON.stringify(bookList));
   getTxt(null, id);
 };
