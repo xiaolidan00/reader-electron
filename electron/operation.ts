@@ -229,7 +229,7 @@ export const getTxt = (ev: any, id: string) => {
 
     lines.forEach((it: string, i: number) => {
       let tag = true;
-      let r = it.replace(/\s+/g, '');
+      let r = it.trim();
       if (zhangjie.test(r)) {
         newTitle = r;
         tag = false;

@@ -226,8 +226,8 @@
     const fileName = bookItem.value!.name + '（带章节目录）.txt';
     let txt = '';
     const t0 = chapterList.value[0];
-    txt += t0.title;
-    txt += t0.content.join('');
+    txt += t0.title + '\n';
+    txt += t0.content.join('') + '\n';
     for (let i = 1; i < chapterList.value.length; i++) {
       const it = chapterList.value[i];
       let t = it.title;
@@ -235,7 +235,7 @@
         t = t.replace(/\s*第\s*[0-9]+\s*章/g, '');
       }
       txt += `第${i}章 ` + t + '\n';
-      txt += it.content.join('');
+      txt += it.content.join('') + '\n';
     }
 
     const file = new File([txt], fileName, { type: 'text/plain' });
