@@ -137,7 +137,7 @@
   <div class="search-box">
     <div class="search">
       <input placeholder="搜索关键词" type="text" v-model="listSearchKey" />
-      <i class="close-icon" @click="listSearchKey = ''"></i>
+      <i class="close-icon" @click="listSearchKey = ''" v-show="listSearchKey"></i>
     </div>
     <!-- <i class="more-icon"></i> -->
   </div>

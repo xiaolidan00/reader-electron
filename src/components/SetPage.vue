@@ -111,6 +111,9 @@
       height: 40px;
       outline: none;
     }
+    input[type='text']:disabled {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
     table {
       width: 100%;
 

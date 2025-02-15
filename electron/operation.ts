@@ -161,18 +161,12 @@ function sliceContent(it: string) {
   if (it.length + 3 <= LineNum && it) {
     content.push('\t' + it + '\n');
   } else {
-    it = '\t' + it;
-    let count = 0;
-    let ss = '';
+    let count = 3;
+    let ss = '\t';
     for (let i = 0; i < it.length; i++) {
       const s = it[i];
-      if (s == '\t') {
-        count += 3;
-      } else {
-        count++;
-      }
+      count++;
       ss += s;
-
       if (count == LineNum || i == it.length - 1) {
         content.push(ss);
         count = 0;
