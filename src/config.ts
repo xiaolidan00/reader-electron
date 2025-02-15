@@ -7,6 +7,7 @@ export const dataList = ref<Array<BookType>>([]);
 export const bookItem = ref<BookType>();
 export const chapterList = ref<ChapterType[]>([]);
 export const loading = ref<boolean>(true);
+export const listSearchKey = ref<string>('');
 
 export const searchHighlight = new Highlight();
 CSS.highlights.set(`search-highlight`, searchHighlight);

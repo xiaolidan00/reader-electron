@@ -82,6 +82,10 @@ body,
   display: inline-block;
   content: url(/save.svg);
 }
+.close-icon {
+  display: inline-block;
+  content: url(/close.svg);
+}
 ::-webkit-scrollbar {
   background-color: transparent;
   height: 10px;

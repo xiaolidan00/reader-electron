@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { reactive, onBeforeUnmount, computed, onMounted } from 'vue';
-  import { selectBook, dataList, bookItem, loading } from '../config';
+  import { selectBook, dataList, bookItem, loading, listSearchKey } from '../config';
   import { BookType } from '../../@types';
   import { cloneDeep } from 'lodash-es';
 
@@ -16,20 +16,20 @@
     isEdit: boolean;
     checkMap: { [n: string]: boolean };
     isAll: boolean;
-    searchKey: string;
+
     isDetail: boolean;
   };
   const state = reactive<StateType>({
     isEdit: false,
     checkMap: {},
     isAll: false,
-    searchKey: '',
+
     isDetail: false
   });
   const showDataList = computed(() => {
     const list = dataList.value;
-    if (state.searchKey) {
-      return list.filter((it) => it.name.indexOf(state.searchKey) >= 0);
+    if (listSearchKey.value) {
+      return list.filter((it) => it.name.indexOf(listSearchKey.value) >= 0);
     }
     return list;
   });
@@ -136,8 +136,8 @@
 <template>
   <div class="search-box">
     <div class="search">
-      <input placeholder="搜索关键词" type="text" v-model="state.searchKey" />
-      <i class="search-icon"></i>
+      <input placeholder="搜索关键词" type="text" v-model="listSearchKey" />
+      <i class="close-icon" @click="listSearchKey = ''"></i>
     </div>
     <!-- <i class="more-icon"></i> -->
   </div>
