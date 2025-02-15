@@ -11,6 +11,8 @@ body,
 :root {
   --font: #505050;
   --bg: rgb(250, 235, 215);
+  --fontSize: 18px;
+  --border: rgba(0, 0, 0, 0.05);
 }
 @font-face {
   font-family: 'msyh';
@@ -35,6 +37,10 @@ body,
 .book-icon {
   display: inline-block;
   content: url(/book.svg);
+}
+.setting-icon {
+  display: inline-block;
+  content: url(/setting.svg);
 }
 @keyframes rotating {
   0% {
@@ -72,6 +78,10 @@ body,
   display: inline-block;
   content: url(/stop.svg);
 }
+.save-icon {
+  display: inline-block;
+  content: url(/save.svg);
+}
 ::-webkit-scrollbar {
   background-color: transparent;
   height: 10px;
@@ -99,7 +109,7 @@ body,
     padding: 0 10px;
   }
 
-  input {
+  input[type='text'] {
     flex: 1;
 
     border: none;
@@ -115,4 +125,39 @@ body,
 ::highlight(search-highlight) {
   background-color: yellow;
   color: black;
+}
+
+.drawer-bg {
+  height: 100%;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  z-index: 3;
+  .drawer-blank {
+    height: 10%;
+  }
+  .drawer-body {
+    border-radius: 10px 10px 0 0;
+    height: 90%;
+    overflow: hidden;
+    background-color: var(--bg);
+  }
+}
+input[type='range'] {
+  width: 100%;
+
+  background-color: #ccc;
+  border-radius: 4px;
+  height: 4px;
+
+  &::-webkit-slider-thumb {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    /*可以修改滑块的若干样式*/
+    background-color: dodgerblue;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  }
 }

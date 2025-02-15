@@ -119,6 +119,9 @@
       window.ipcRenderer.send('dragTxt', fileList);
     }
   };
+  const getTitle = (t: string) => {
+    return t.replace(/[,，！!、]/g, '').substring(0, 25);
+  };
   onMounted(() => {
     document.addEventListener('dragover', onDragOver);
     document.addEventListener('drop', onDropFile);
@@ -149,15 +152,16 @@
   </div>
   <div class="book-list">
     <div class="book-item" v-for="item in showDataList" :key="item.name">
-      <div class="book-top" v-if="state.isEdit">
+      <div class="book-top">
         <i
+          v-if="state.isEdit"
           :class="['check', state.checkMap[item.id] ? 'active' : '']"
           @click.self="onCheckItem(item)"
         ></i>
       </div>
 
       <div class="book-cover" @click.self="onReadTxt(item)">
-        {{ item.name }}
+        {{ getTitle(item.name) }}
       </div>
       <div class="book-detail" @click="onRightItem(item)">
         <span>{{ item.chapter + 1 }}/{{ item.total }} </span>
@@ -200,7 +204,7 @@
       background-color: white;
       padding: 20px;
       td {
-        border-top: solid 1px rgba(0, 0, 0, 0.05);
+        border-top: solid 1px var(--border);
       }
     }
   }
@@ -261,7 +265,7 @@
     }
     .book-top {
       text-align: left;
-      position: absolute;
+      height: 16px;
     }
 
     .book-cover {
@@ -273,6 +277,9 @@
       color: white;
       font-weight: bold;
       font-size: 16px;
+      overflow: hidden;
+      word-break: break-all;
+
       cursor: pointer;
     }
     .book-detail {

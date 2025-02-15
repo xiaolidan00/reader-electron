@@ -10,9 +10,17 @@ export type BookType = {
   path: string;
   group: string;
   disable?: boolean;
+  size: number;
+  regex?: string;
 };
 export type ChapterType = {
   //   index: number;
   title: string;
   content: string[];
+};
+export type SearchItemType = {
+  content: string;
+  chapter: number;
+  index: number;
+  start: number;
 };

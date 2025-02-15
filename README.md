@@ -17,6 +17,13 @@
 - txt 文件拖入
 - 监测耳机等状态，一旦拔掉立即停止播放，避免尴尬
 
+## v1.0.2
+
+- 内容章节正则设置
+- 字体颜色与背景设置
+- 分模块
+- 另存为带章节的 txt
+
 # electron 开发问题
 
 ## pnpm install electron node install 失败
