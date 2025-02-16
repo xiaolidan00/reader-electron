@@ -125,6 +125,10 @@
       window.ipcRenderer.send('dragTxt', fileList);
     }
   };
+  const onBatch = () => {
+    state.isEdit = !state.isEdit;
+    state.checkMap = cloneDeep(orginMap);
+  };
   const getTitle = (t: string) => {
     return t.replace(/[,，！!、]/g, '').substring(0, 25);
   };
@@ -150,9 +154,7 @@
   <div class="tool-bar">
     <span @click="openTxt()">导入TXT</span>
     <i v-if="state.isEdit" :class="['check', state.isAll ? 'active' : '']" @click="onAll()"></i>
-    <span :class="[state.isEdit ? 'active' : '']" @click="state.isEdit = !state.isEdit"
-      >批量操作</span
-    >
+    <span :class="[state.isEdit ? 'active' : '']" @click="onBatch">批量操作</span>
     <span v-if="state.isEdit" @click="onDelTxt('record')">删除记录</span>
     <span v-if="state.isEdit" @click="onDelTxt('file')">删除文件</span>
   </div>
