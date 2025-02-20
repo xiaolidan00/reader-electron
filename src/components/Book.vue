@@ -12,8 +12,11 @@
       @mousedown.stop="onDown"
       @mouseup.stop="onPageAction"
     >
-      <div class="chapter-title" v-if="chapterList.length && currentIndex == 0">
-        {{ chapterList[currentChapter]?.title }}
+      <div
+        class="chapter-title"
+        v-if="chapterList.length && currentIndex == 0 && chapterList[currentChapter]"
+      >
+        {{ chapterList[currentChapter].title }}
       </div>
       <div class="book-content" id="contenTxt" v-html="state.showContent"></div>
     </div>

@@ -49,10 +49,11 @@
     height: 40px;
     line-height: 40px;
     font-size: 14px;
+    overflow: hidden;
     padding: 0 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
-
+    text-overflow: ellipsis;
     &:not(:last-child) {
       border-bottom: solid 1px var(--border);
     }

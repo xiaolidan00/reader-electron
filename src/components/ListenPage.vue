@@ -161,7 +161,7 @@
       voiceList = speechSynthesis.getVoices() || [];
 
       state.voices = voiceList.map((it: any) => it.name);
-    }, 3000);
+    }, 1000);
   });
   onBeforeUnmount(() => {
     speechSynthesis.cancel();
@@ -206,10 +206,12 @@
       }
     }
     .title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       height: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      line-height: 100px;
+      text-align: center;
       font-weight: bold;
       font-size: 18px;
     }
