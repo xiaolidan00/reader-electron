@@ -1,7 +1,7 @@
 <template>
   <Drawer :show="isMenu" @hide="onHide">
     <div class="nav-title" v-if="bookItem">{{ bookItem.name }}</div>
-    <div class="nav-container">
+    <div class="nav-container" ref="navRef">
       <div
         :class="['nav-item', currentChapter == idx ? 'active' : '']"
         v-for="(item, idx) in chapterList"
@@ -15,19 +15,30 @@
 </template>
 
 <script setup lang="ts">
-  import Drawer from './Drawer.vue';
-  import { currentChapter, bookItem, chapterList } from '../config';
-  defineProps({
+  import Drawer from "./Drawer.vue";
+  import {currentChapter, bookItem, chapterList} from "../config";
+  import {watch, nextTick, useTemplateRef} from "vue";
+  const navRef = useTemplateRef("navRef");
+  const props = defineProps({
     isMenu: Boolean
   });
-  const emit = defineEmits(['update:isMenu', 'item']);
+  const emit = defineEmits(["update:isMenu", "item"]);
   const onHide = () => {
-    emit('update:isMenu', false);
+    emit("update:isMenu", false);
   };
   const onChapterItem = (idx: number) => {
-    emit('item', idx);
-    emit('update:isMenu', false);
+    emit("item", idx);
+    emit("update:isMenu", false);
   };
+  watch(
+    () => props.isMenu,
+    async (v) => {
+      await nextTick();
+      if (v) {
+        navRef.value?.scrollTo(0, (currentChapter.value - 1) * 40);
+      }
+    }
+  );
 </script>
 
 <style scoped lang="scss">
