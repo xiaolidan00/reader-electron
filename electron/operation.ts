@@ -38,6 +38,7 @@ function updateTxt(item: string) {
     total: 0,
     index: 0,
     size: info.size,
+    num: 0,
     updateTime: info.mtimeMs,
     importTime: new Date().getTime(),
     readTime: new Date().getTime(),
@@ -101,7 +102,7 @@ function transformCode(path: string) {
   let buf = fs.readFileSync(path);
   const result = jschardet.detect(buf);
 
-  if (result.encoding == 'GB2312') {
+  if (result.encoding === 'GB2312') {
     const txt = encodingConvert.convert(buf, 'UTF8', 'GB2312');
     try {
       fs.writeFileSync(path, txt);
@@ -118,19 +119,22 @@ function readedBook({
   id,
   chapter,
   index,
-  total
+  total,
+  num
 }: {
   id: string;
   chapter: number;
   index: number;
   total: number;
+  num: number;
 }) {
   const data = {
     ...bookList[bookIds[id]],
     index,
     chapter,
     total,
-    readTime: new Date().getTime()
+    readTime: new Date().getTime(),
+    num
   };
   bookList[bookIds[id]] = data;
   saveBook();
@@ -140,8 +144,8 @@ export const onClose = (ev: any) => {
   if (currentPage === 'book') {
     ev.preventDefault();
     win!.webContents.send('closeBook');
-    ipcMain.once('closedBook', (ev, { id, chapter, index, total }) => {
-      readedBook({ id, chapter, index, total });
+    ipcMain.once('closedBook', (ev, { id, chapter, index, total, num }) => {
+      readedBook({ id, chapter, index, total, num });
       setTimeout(() => {
         win!.destroy();
       }, 500);
@@ -251,6 +255,11 @@ export const getTxt = (ev: any, id: string) => {
         content: content
       });
     }
+    data.num = txt.length;
+    console.log(' getTxt ~ data.num:', data.num);
+    readedBook(data);
+    sendList();
+
     win!.webContents.send('readTxt', list);
   } else {
     delOneTxt(id);
@@ -281,7 +290,8 @@ export const readedTxt = (
   ev: any,
   { id, chapter, index, total }: { id: string; chapter: number; index: number; total: number }
 ) => {
-  readedBook({ id, chapter, index, total });
+  const data = bookList[bookIds[id]];
+  readedBook({ id, chapter, index, total, num: data.num });
   setTimeout(() => {
     sendList();
   }, 500);

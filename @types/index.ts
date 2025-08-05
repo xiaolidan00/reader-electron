@@ -4,6 +4,7 @@ export type BookType = {
   chapter: number;
   index: number;
   total: number;
+  num: number;
   updateTime: number;
   importTime: number;
   readTime: number;

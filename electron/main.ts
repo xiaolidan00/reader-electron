@@ -51,8 +51,9 @@ function createWindow() {
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', firstLoad);
-
+  //拖入文件
   ipcMain.on('dragTxt', openFiles);
+  //打开文件
   ipcMain.on('openTxt', openTxt);
 
   ipcMain.on('currentPage', setCurrentPage);

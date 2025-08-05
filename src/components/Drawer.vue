@@ -8,10 +8,20 @@
 </template>
 
 <script setup lang="ts">
-  defineProps({
-    show: Boolean
+  import { watch } from 'vue';
+  const props = withDefaults(defineProps<{ show: boolean; onShow?: Function }>(), {
+    show: false
   });
   const emit = defineEmits(['hide']);
+
+  watch(
+    () => props.show,
+    (v) => {
+      if (v && props.onShow) {
+        props.onShow();
+      }
+    }
+  );
 
   const onHide = () => {
     emit('hide', false);

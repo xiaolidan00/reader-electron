@@ -7,8 +7,9 @@
   const detailSet: Array<{ name: string; prop: keyof BookType; idx?: boolean }> = [
     { name: '文件路径', prop: 'path' },
     { name: '共有章节', prop: 'total' },
-    { name: '当前章节', prop: 'chapter', idx: true }
-
+    { name: '当前章节', prop: 'chapter', idx: true },
+    { name: '共有字数', prop: 'num' },
+    { name: '文件大小', prop: 'size' }
     // { name: '最近阅读', prop: 'readTime'  }
   ];
   let orginMap: { [n: string]: boolean } = {};
@@ -54,7 +55,13 @@
     }
     if (tag) window.ipcRenderer.send('delTxt', { map: cloneDeep(state.checkMap), type });
 
-    state.checkMap = cloneDeep(orginMap);
+    state.checkMap = {};
+    state.isEdit = false;
+  };
+  const onDelOneTxt = (type: 'record' | 'file') => {
+    window.ipcRenderer.send('delTxt', { map: { [bookItem.value!.id]: true }, type });
+    state.checkMap = {};
+    state.isDetail = false;
     state.isEdit = false;
   };
   const onAll = () => {
@@ -64,7 +71,7 @@
         state.checkMap[k] = true;
       }
     } else {
-      state.checkMap = cloneDeep(orginMap);
+      state.checkMap = {};
     }
   };
   const onCheckItem = (item: BookType) => {
@@ -85,7 +92,7 @@
   const refreshTxt = (_event: any, data: any) => {
     if (isLock) return;
     isLock = true;
-    console.log('refreshTxt');
+    console.log('refreshTxt', data);
     dataList.value = data;
     orginMap = {};
     data.forEach((a: BookType) => {
@@ -182,18 +189,55 @@
     <div class="dialog-body">
       <div class="chapter-title">{{ bookItem.name }}</div>
       <div>
-        <table>
+        <table class="detail-table">
           <tr v-for="(item, idx) in detailSet" :key="idx">
             <td>{{ item.name }}</td>
             <td>{{ item.idx ? (bookItem[item.prop] as number) + 1 : bookItem[item.prop] }}</td>
           </tr>
         </table>
+
+        <div class="bottom-action">
+          <span @click="onDelOneTxt('record')">删除记录</span>
+          <span @click="onDelOneTxt('file')">删除文件</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+  table.detail-table {
+    tr {
+      td:first-child {
+        white-space: nowrap;
+        padding-right: 20px;
+      }
+      td:last-child {
+        line-height: 1.2;
+      }
+    }
+  }
+  .bottom-action {
+    display: flex;
+    width: 100%;
+    position: fixed;
+    bottom: 0px;
+    height: 40px;
+    > span {
+      display: inline-block;
+      line-height: 40px;
+      cursor: pointer;
+      text-align: center;
+      flex: 1;
+      &.active,
+      &:hover {
+        color: dodgerblue;
+      }
+      &:not(:last-child) {
+        border-right: solid 1px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
   .dialog-bg {
     position: fixed;
     left: 0px;

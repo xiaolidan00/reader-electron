@@ -24,6 +24,13 @@
 - 分模块
 - 另存为带章节的 txt
 
+## v1.0.3
+
+- 单本书详情删除记录或删除文件功能
+- 单本书详情排版优化
+- 单本书详情添加字数统计
+- 添加部分章节导出功能
+
 # electron 开发问题
 
 ## pnpm install electron node install 失败
@@ -71,3 +78,4 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 - logo 图标一定要用 大小为 256x256 的 png/jpg/ico 图片，不能用 svg
 - css 使用图片资源地址`url(/aaa.svg)`
 - ipcRenderer.off 和 removeListener 调用会失败，没法注销事件监听，只能强行全部监听移除，这什么鬼 Bug
+- node 版本 18.20.2
