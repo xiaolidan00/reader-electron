@@ -36,9 +36,9 @@ function createWindow() {
   });
 
   // Test active push message to Renderer-process.
-  win.webContents.on("did-finish-load", firstLoad);
-  const controller = new ReaderController(win);
 
+  const controller = new ReaderController(win);
+  win.webContents.on("did-finish-load", controller.getList);
   // win.on("close", controller.readedTxt);
 
   if (VITE_DEV_SERVER_URL) {
