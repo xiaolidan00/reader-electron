@@ -1,21 +1,21 @@
 <script setup lang="ts">
-  import { reactive, onBeforeUnmount, computed, onMounted } from 'vue';
-  import { selectBook, dataList, bookItem, loading, listSearchKey } from '../config';
-  import { BookType } from '../../@types';
-  import { cloneDeep } from 'lodash-es';
+  import {reactive, onBeforeUnmount, computed, onMounted} from "vue";
+  import {selectBook, dataList, bookItem, loading, listSearchKey} from "../config";
+  import {BookType} from "../../@types";
+  import {cloneDeep} from "lodash-es";
 
-  const detailSet: Array<{ name: string; prop: keyof BookType; idx?: boolean }> = [
-    { name: '文件路径', prop: 'path' },
-    { name: '共有章节', prop: 'total' },
-    { name: '当前章节', prop: 'chapter', idx: true },
-    { name: '共有字数', prop: 'num' },
-    { name: '文件大小', prop: 'size' }
+  const detailSet: Array<{name: string; prop: keyof BookType; idx?: boolean}> = [
+    {name: "文件路径", prop: "path"},
+    {name: "共有章节", prop: "total"},
+    {name: "当前章节", prop: "chapter", idx: true},
+    {name: "共有字数", prop: "num"},
+    {name: "文件大小", prop: "size"}
     // { name: '最近阅读', prop: 'readTime'  }
   ];
-  let orginMap: { [n: string]: boolean } = {};
+  let orginMap: {[n: string]: boolean} = {};
   type StateType = {
     isEdit: boolean;
-    checkMap: { [n: string]: boolean };
+    checkMap: {[n: string]: boolean};
     isAll: boolean;
 
     isDetail: boolean;
@@ -35,31 +35,39 @@
     return list;
   });
   const openTxt = () => {
-    window.ipcRenderer.send('openTxt');
+    //打开txt文件
+    window.ipcRenderer.send("openTxt");
   };
   const onRightItem = (item: BookType) => {
     state.isDetail = true;
     bookItem.value = item;
   };
   const onReadTxt = (item: BookType) => {
-    selectBook.value = item.id;
-    bookItem.value = item;
+    if (state.isEdit) {
+      onCheckItem(item);
+    } else {
+      selectBook.value = item.id;
+      bookItem.value = item;
+    }
   };
-  const onDelTxt = (type: 'record' | 'file') => {
+  const onDelTxt = (type: "record" | "file") => {
     let tag = false;
-    for (let k in state.checkMap) {
+    for (const k in state.checkMap) {
       if (state.checkMap[k]) {
         tag = true;
         break;
       }
     }
-    if (tag) window.ipcRenderer.send('delTxt', { map: cloneDeep(state.checkMap), type });
+    if (tag) {
+      window.ipcRenderer.send("delTxt", {map: cloneDeep(state.checkMap), type});
+    }
 
     state.checkMap = {};
     state.isEdit = false;
+    state.isAll = false;
   };
-  const onDelOneTxt = (type: 'record' | 'file') => {
-    window.ipcRenderer.send('delTxt', { map: { [bookItem.value!.id]: true }, type });
+  const onDelOneTxt = (type: "record" | "file") => {
+    window.ipcRenderer.send("delTxt", {map: {[bookItem.value!.id]: true}, type});
     state.checkMap = {};
     state.isDetail = false;
     state.isEdit = false;
@@ -76,7 +84,7 @@
   };
   const onCheckItem = (item: BookType) => {
     state.checkMap[item.id] = !state.checkMap[item.id];
-    console.log(state.checkMap);
+
     let count = 0;
     for (let k in state.checkMap) {
       if (state.checkMap[k]) count++;
@@ -92,7 +100,7 @@
   const refreshTxt = (_event: any, data: any) => {
     if (isLock) return;
     isLock = true;
-    console.log('refreshTxt', data);
+    console.log("refreshTxt", data);
     dataList.value = data;
     orginMap = {};
     data.forEach((a: BookType) => {
@@ -104,8 +112,7 @@
       isLock = false;
     }, 1000);
   };
-  window.ipcRenderer.on('listTxt', refreshTxt);
-  window.ipcRenderer.send('currentPage', 'list');
+
   const onDragOver = (ev: DragEvent) => {
     ev.preventDefault();
   };
@@ -116,20 +123,21 @@
       const items = ev.dataTransfer.items;
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        if (item.type === 'file') {
+        if (item.type === "file") {
           const f = item.getAsFile()!;
-          if (f.name.endsWith('.txt')) fileList.push(f.path);
+          if (f.name.endsWith(".txt")) fileList.push(f.path);
         }
       }
     }
 
     if (fileList.length === 0 && ev.dataTransfer?.files?.length) {
       fileList = Array.from(ev.dataTransfer.files)
-        .filter((it) => it.name.endsWith('.txt'))
+        .filter((it) => it.name.endsWith(".txt"))
         .map((it) => it.path);
     }
     if (fileList.length) {
-      window.ipcRenderer.send('dragTxt', fileList);
+      //拖入txt文件
+      window.ipcRenderer.send("dragTxt", fileList);
     }
   };
   const onBatch = () => {
@@ -137,16 +145,17 @@
     state.checkMap = cloneDeep(orginMap);
   };
   const getTitle = (t: string) => {
-    return t.replace(/[,，！!、]/g, '').substring(0, 25);
+    return t.replace(/[,，！!、:：]/g, "").substring(0, 25);
   };
   onMounted(() => {
-    document.addEventListener('dragover', onDragOver);
-    document.addEventListener('drop', onDropFile);
+    window.ipcRenderer.on("listTxt", refreshTxt);
+    document.addEventListener("dragover", onDragOver);
+    document.addEventListener("drop", onDropFile);
   });
   onBeforeUnmount(() => {
-    window.ipcRenderer.off('listTxt', refreshTxt);
-    document.removeEventListener('dragover', onDragOver);
-    document.removeEventListener('drop', onDropFile);
+    window.ipcRenderer.off("listTxt", refreshTxt);
+    document.removeEventListener("dragover", onDragOver);
+    document.removeEventListener("drop", onDropFile);
   });
 </script>
 

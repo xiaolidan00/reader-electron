@@ -32,6 +32,8 @@ export class ReaderController {
       this.bookList = JSON.parse(books) as BookType[];
       this.updateBookIds();
       this.win.webContents.send("listTxt", this.bookList);
+    } else {
+      this.win.webContents.send("listTxt", []);
     }
   }
   /** 拖入txt文件 */
@@ -61,7 +63,6 @@ export class ReaderController {
       id: string;
       chapter: number;
       index: number;
-      total: number;
     }
   ) {
     const idx = this.bookIds[op.id];
@@ -70,7 +71,7 @@ export class ReaderController {
       ...pre,
       index: op.index,
       chapter: op.chapter,
-      total: op.total,
+
       updateTime: new Date().getTime()
     };
     this.bookList[idx] = data;
@@ -121,6 +122,7 @@ export class ReaderController {
       if (data.num === 0) {
         data.num = txt.length;
         data.updateTime = new Date().getTime();
+        data.total = list.length;
         this.bookList[idx] = data;
         this.saveBook();
       }
@@ -128,6 +130,7 @@ export class ReaderController {
     } else {
       //文件找不到，自动删除记录
       this.bookList.splice(idx, 1);
+      this.win.webContents.send("backList");
       this.saveBook();
     }
   }
@@ -147,12 +150,24 @@ export class ReaderController {
     this.getTxt(null, id);
   }
   /** 删除txt文件或记录 */
-  delTxt(ev: any, ids: string[]) {
-    const obj: {[n: string]: boolean} = {};
-    ids.forEach((a) => {
-      obj[a] = true;
+  delTxt(ev: any, {map, type}: {map: {[n: string]: boolean}; type: string}) {
+    let delData: BookType[] = [];
+    let newList: BookType[] = [];
+    this.bookList.forEach((item) => {
+      if (map[item.id]) {
+        delData.push(item);
+      } else {
+        newList.push(item);
+      }
     });
-    this.bookList = this.bookList.filter((a) => !obj[a.id]);
+
+    if (type === "file") {
+      for (let i = 0; i < delData.length; i++) {
+        fs.unlinkSync(delData[i].path);
+      }
+    }
+    this.bookList = newList;
+    this.saveBook();
   }
 
   /** 保存读书记录 */

@@ -6,16 +6,8 @@
       {{ currentChapter + 1 }} /{{ chapterList.length }}
     </div>
 
-    <div
-      class="book-container"
-      id="bookContainer"
-      @mousedown.stop="onDown"
-      @mouseup.stop="onPageAction"
-    >
-      <div
-        class="chapter-title"
-        v-if="chapterList.length && currentIndex == 0 && chapterList[currentChapter]"
-      >
+    <div class="book-container" id="bookContainer" @mousedown.stop="onDown" @mouseup.stop="onPageAction">
+      <div class="chapter-title" v-if="chapterList.length && currentIndex == 0 && chapterList[currentChapter]">
         {{ chapterList[currentChapter].title }}
       </div>
       <div class="book-content" id="contenTxt" v-html="state.showContent"></div>
@@ -43,22 +35,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, nextTick, onBeforeUnmount, onMounted } from 'vue';
-  import type { ChapterType, SearchItemType } from '../../@types';
-  import SearchPage from './SearchPage.vue';
-  import ChapterPage from './ChapterPage.vue';
-  import ListenPage from './ListenPage.vue';
-  import SetPage from './SetPage.vue';
-  import { PageNum, LineNum } from '../../data';
-  import {
-    selectBook,
-    loading,
-    bookItem,
-    chapterList,
-    setHighlight,
-    currentChapter,
-    currentIndex
-  } from '../config';
+  import {ref, reactive, nextTick, onBeforeUnmount, onMounted} from "vue";
+  import type {ChapterType, SearchItemType} from "../../@types";
+  import SearchPage from "./SearchPage.vue";
+  import ChapterPage from "./ChapterPage.vue";
+  import ListenPage from "./ListenPage.vue";
+  import SetPage from "./SetPage.vue";
+  import {PageNum, LineNum} from "../../data";
+  import {selectBook, loading, bookItem, chapterList, setHighlight, currentChapter, currentIndex} from "../config";
 
   //<InstanceType<typeof ListenPage>>
   const listenRef = ref();
@@ -78,18 +62,17 @@
     title: bookItem.value!.name,
     isMenu: false,
     detail: [],
-    showContent: '',
+    showContent: "",
     total: 0,
     isListen: false,
     isSearch: false,
     isSet: false
   });
   const updateBook = () => {
-    window.ipcRenderer.send('readedTxt', {
-      id: selectBook.value + '',
+    window.ipcRenderer.send("readedTxt", {
+      id: selectBook.value + "",
       chapter: currentChapter.value,
-      index: currentIndex.value,
-      total: chapterList.value.length
+      index: currentIndex.value
     });
   };
 
@@ -107,13 +90,13 @@
     onChapter(item.chapter, 2);
 
     await nextTick();
-    const contenTxt = document.getElementById('contenTxt')!;
+    const contenTxt = document.getElementById("contenTxt")!;
     const textNode = contenTxt.firstChild!;
     setHighlight(textNode.textContent!.indexOf(searchKey), textNode, searchLen);
   };
   const onBack = () => {
     updateBook();
-    selectBook.value = '';
+    selectBook.value = "";
     bookItem.value = undefined;
     state.isMenu = false;
     state.isListen = false;
@@ -175,7 +158,7 @@
   const getPage = () => {
     const a = currentIndex.value * PageNum - titleLine;
     const b = (currentIndex.value + 1) * PageNum - titleLine;
-    state.showContent = state.detail.slice(a < 0 ? 0 : a, b).join('');
+    state.showContent = state.detail.slice(a < 0 ? 0 : a, b).join("");
   };
 
   const onChapter = (i: number, type: 0 | 1 | 2) => {
@@ -204,7 +187,7 @@
   const onChapterItem = (idx: number) => {
     onChapter(idx, 0);
   };
-  window.ipcRenderer.send('getTxt', selectBook.value);
+
   let isFirst = true;
   const onReadTxt = (_event: any, data: ChapterType[]) => {
     if (isFirst) {
@@ -212,11 +195,11 @@
       currentIndex.value = bookItem.value!.index;
       isFirst = false;
     }
-    console.log('readTxt');
+
     if (data.length) {
       chapterList.value = data;
     } else {
-      alert('章节解析失败');
+      alert("章节解析失败");
       loading.value = false;
       return;
     }
@@ -224,72 +207,64 @@
     onChapter(currentChapter.value, 2);
     loading.value = false;
   };
-  const onSaveTxt = (op?: { start: number; end: number }) => {
+  const onSaveTxt = (op?: {start: number; end: number}) => {
     const start = op?.start || 1;
     const end = op?.end || chapterList.value.length;
-    const fileName = bookItem.value!.name + `（带章节目录）${op ? start + '-' + end : ''}.txt`;
-    let txt = '';
+    const fileName = bookItem.value!.name + `（带章节目录）${op ? start + "-" + end : ""}.txt`;
+    let txt = "";
     const t0 = chapterList.value[0];
-    txt += t0.title + '\n';
-    txt += t0.content.join('') + '\n';
+    txt += t0.title + "\n";
+    txt += t0.content.join("") + "\n";
     for (let i = start; i < end; i++) {
       const it = chapterList.value[i];
       let t = it.title;
       if (/\s*第\s*[0-9]+\s*章/.test(t)) {
-        t = t.replace(/\s*第\s*[0-9]+\s*章/g, '');
+        t = t.replace(/\s*第\s*[0-9]+\s*章/g, "");
       }
-      txt += `第${i}章 ` + t + '\n';
-      txt += it.content.join('') + '\n';
+      txt += `第${i}章 ` + t + "\n";
+      txt += it.content.join("") + "\n";
     }
 
-    const file = new File([txt], fileName, { type: 'text/plain' });
-    const dom = document.createElement('a');
+    const file = new File([txt], fileName, {type: "text/plain"});
+    const dom = document.createElement("a");
     dom.download = fileName;
     dom.href = window.URL.createObjectURL(file);
     document.body.appendChild(dom);
     dom.click();
   };
   updateBook();
-  window.ipcRenderer.on('readTxt', onReadTxt);
-
-  window.ipcRenderer.send('currentPage', 'book');
 
   const backList = () => {
     loading.value = false;
-    console.log('TXT DELETE');
-    selectBook.value = '';
-    alert('TXT已删除，不可阅读！');
+    console.log("TXT DELETE");
+    selectBook.value = "";
+    alert("TXT已删除，不可阅读！");
   };
-  window.ipcRenderer.on('backList', backList);
-  const closeBook = () => {
-    window.ipcRenderer.send('closedBook', {
-      id: selectBook.value + '',
-      chapter: currentChapter.value,
-      index: currentIndex.value,
-      total: chapterList.value.length
-    });
-  };
-  window.ipcRenderer.on('closeBook', closeBook);
+
   const onKeyPress = (ev: KeyboardEvent) => {
     switch (ev.code) {
-      case 'ArrowDown':
-      case 'ArrowLeft':
+      case "ArrowDown":
+      case "ArrowLeft":
         prePage();
         break;
-      case 'ArrowUp':
-      case 'ArrowRight':
+      case "ArrowUp":
+      case "ArrowRight":
         nextPage();
         break;
     }
   };
+  window.ipcRenderer.send("getTxt", selectBook.value);
   onMounted(() => {
-    window.addEventListener('keyup', onKeyPress);
+    window.ipcRenderer.on("backList", backList);
+    window.ipcRenderer.on("readTxt", onReadTxt);
+    window.ipcRenderer.on("closeBook", updateBook);
+    window.addEventListener("keyup", onKeyPress);
   });
   onBeforeUnmount(() => {
-    window.ipcRenderer.off('readTxt', onReadTxt);
-    window.ipcRenderer.off('closeBook', closeBook);
-    window.ipcRenderer.off('backList', backList);
-    window.removeEventListener('keyup', onKeyPress);
+    window.ipcRenderer.off("readTxt", onReadTxt);
+    window.ipcRenderer.off("closeBook", updateBook);
+    window.ipcRenderer.off("backList", backList);
+    window.removeEventListener("keyup", onKeyPress);
   });
 </script>
 

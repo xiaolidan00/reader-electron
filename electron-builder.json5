@@ -1,26 +1,26 @@
 // @see - https://www.electron.build/configuration/configuration
 {
-  $schema: 'https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json',
-  appId: 'reader-electron',
+  $schema: "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  appId: "reader-electron",
   asar: true,
-  productName: 'Txt阅读器',
+  productName: "Txt阅读器",
   directories: {
-    output: 'release/${version}'
+    output: "release/${version}"
   },
-  files: ['dist', 'dist-electron'],
+  files: ["dist", "dist-electron"],
   mac: {
-    target: ['dmg'],
-    artifactName: '${productName}-Mac-${version}-Installer.${ext}'
+    target: ["dmg"],
+    artifactName: "${productName}-Mac-${version}-Installer.${ext}"
   },
   win: {
     target: [
       {
-        target: 'nsis',
-        arch: ['x64']
+        target: "nsis",
+        arch: ["x64", "x32"]
       }
     ],
-    icon: 'public/logo.png',
-    artifactName: '${productName}-Windows-${version}-Setup.${ext}'
+    icon: "public/logo.png",
+    artifactName: "${productName}-Windows-${version}-Setup.${ext}"
   },
   nsis: {
     oneClick: false,
@@ -29,7 +29,7 @@
     deleteAppDataOnUninstall: false
   },
   linux: {
-    target: ['AppImage'],
-    artifactName: '${productName}-Linux-${version}.${ext}'
+    target: ["AppImage"],
+    artifactName: "${productName}-Linux-${version}.${ext}"
   }
 }

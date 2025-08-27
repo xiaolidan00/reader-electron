@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
-  import List from './components/List.vue';
-  import Book from './components/Book.vue';
-  import { selectBook, loading } from './config';
+  import {computed} from "vue";
+  import List from "./components/List.vue";
+  import Book from "./components/Book.vue";
+  import {selectBook, loading} from "./config";
 
   const currentPart = computed(() => {
     return selectBook.value ? Book : List;

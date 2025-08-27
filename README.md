@@ -43,18 +43,17 @@
 ```js
 downloadArtifact({
   version,
-  artifactName: 'electron',
-  force: process.env.force_no_cache === 'true',
+  artifactName: "electron",
+  force: process.env.force_no_cache === "true",
   cacheRoot: process.env.electron_config_cache,
   checksums:
-    process.env.electron_use_remote_checksums ??
-    process.env.npm_config_electron_use_remote_checksums
+    process.env.electron_use_remote_checksums ?? process.env.npm_config_electron_use_remote_checksums
       ? undefined
-      : require('./checksums.json'),
+      : require("./checksums.json"),
   platform,
   arch,
   mirrorOptions: {
-    mirror: 'http://npmmirror.com/mirrors/electron/'
+    mirror: "http://npmmirror.com/mirrors/electron/"
   }
 })
   .then(extractFile)
@@ -80,3 +79,4 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 - css 使用图片资源地址`url(/aaa.svg)`
 - ipcRenderer.off 和 removeListener 调用会失败，没法注销事件监听，只能强行全部监听移除，这什么鬼 Bug
 - node 版本 18.20.2
+- yarn

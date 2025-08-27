@@ -15,12 +15,12 @@ body,
   --border: rgba(0, 0, 0, 0.05);
 }
 @font-face {
-  font-family: 'msyh';
+  font-family: "msyh";
   src: url(/msyh.ttf);
 }
 * {
   box-sizing: border-box !important;
-  font-family: 'msyh';
+  font-family: "msyh";
 }
 .more-icon {
   display: inline-block;
@@ -113,7 +113,7 @@ body,
     padding: 0 10px;
   }
 
-  input[type='text'] {
+  input[type="text"] {
     flex: 1;
 
     border: none;
@@ -149,7 +149,7 @@ body,
     background-color: var(--bg);
   }
 }
-input[type='range'] {
+input[type="range"] {
   width: 100%;
 
   background-color: #ccc;

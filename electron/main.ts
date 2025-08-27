@@ -38,7 +38,9 @@ function createWindow() {
   // Test active push message to Renderer-process.
 
   const controller = new ReaderController(win);
-  win.webContents.on("did-finish-load", controller.getList);
+  win.webContents.on("did-finish-load", () => {
+    controller.getList();
+  });
   // win.on("close", controller.readedTxt);
 
   if (VITE_DEV_SERVER_URL) {
@@ -58,7 +60,6 @@ function createWindow() {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
-    win = null;
   }
 });
 
