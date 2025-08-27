@@ -14,13 +14,10 @@ body,
   --fontSize: 18px;
   --border: rgba(0, 0, 0, 0.05);
 }
-@font-face {
-  font-family: "msyh";
-  src: url(/msyh.ttf);
-}
+
 * {
   box-sizing: border-box !important;
-  font-family: "msyh";
+  font-family: "Microsoft YaHei", "微软雅黑";
 }
 .more-icon {
   display: inline-block;

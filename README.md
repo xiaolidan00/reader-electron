@@ -32,6 +32,11 @@
 - 添加部分章节导出功能
 - 阅读快捷键翻页，章节列表滚动定位
 
+## v1.0.4
+
+- Electron Node 操作优化
+- x32 兼容打包
+
 # electron 开发问题
 
 ## pnpm install electron node install 失败
