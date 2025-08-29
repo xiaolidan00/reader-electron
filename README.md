@@ -41,7 +41,6 @@
 
 - 朗读时文本高亮
 - 文本内容排版优化
--
 
 # electron 开发问题
 
@@ -84,6 +83,31 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-binaries/
 ```
 
+## electron-builder 配置 afterPack 移除语言文件
+
+`electron-builder.json5`
+
+```json
+{
+  "afterPack": "./removeLocales.js"
+}
+```
+
+`removeLocales.js`
+
+```js
+import fs from 'node:fs';
+
+export default function (context) {
+  const localeDir = context.appOutDir + '/locales/';
+  const files = fs.readdirSync(localeDir);
+  if (!(files && files.length)) return;
+  for (let i = 0, len = files.length; i < len; i++) {
+    fs.unlinkSync(localeDir + files[i]);
+  }
+}
+```
+
 ## 注意事项
 
 - 要在管理员的命令行窗口执行`npm run build`
@@ -91,4 +115,4 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 - css 使用图片资源地址`url(/aaa.svg)`
 - ipcRenderer.off 和 removeListener 调用会失败，没法注销事件监听，只能强行全部监听移除，这什么鬼 Bug
 - node 版本 18.20.2
-- yarn
+- 包管理 yarn
