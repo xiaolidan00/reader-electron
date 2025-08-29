@@ -37,6 +37,12 @@
 - Electron Node 操作优化
 - x32 兼容打包
 
+## v1.0.5
+
+- 朗读时文本高亮
+- 文本内容排版优化
+-
+
 # electron 开发问题
 
 ## pnpm install electron node install 失败
@@ -48,17 +54,18 @@
 ```js
 downloadArtifact({
   version,
-  artifactName: "electron",
-  force: process.env.force_no_cache === "true",
+  artifactName: 'electron',
+  force: process.env.force_no_cache === 'true',
   cacheRoot: process.env.electron_config_cache,
   checksums:
-    process.env.electron_use_remote_checksums ?? process.env.npm_config_electron_use_remote_checksums
+    process.env.electron_use_remote_checksums ??
+    process.env.npm_config_electron_use_remote_checksums
       ? undefined
-      : require("./checksums.json"),
+      : require('./checksums.json'),
   platform,
   arch,
   mirrorOptions: {
-    mirror: "http://npmmirror.com/mirrors/electron/"
+    mirror: 'http://npmmirror.com/mirrors/electron/'
   }
 })
   .then(extractFile)

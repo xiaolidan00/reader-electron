@@ -17,6 +17,10 @@ export function setHighlight(start: number, textNode: Node, searchLen: number) {
   range.setStart(textNode, start);
   range.setEnd(textNode, start + searchLen);
   searchHighlight.add(range);
+  return range;
+}
+export function removeHighlight(range: Range) {
+  searchHighlight.delete(range);
 }
 
 export const currentChapter = ref<number>(0);
