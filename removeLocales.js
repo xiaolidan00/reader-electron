@@ -5,6 +5,6 @@ export default function (context) {
   const files = fs.readdirSync(localeDir);
   if (!(files && files.length)) return;
   for (let i = 0, len = files.length; i < len; i++) {
-    fs.unlinkSync(localeDir + files[i]);
+    if (files[i] !== 'zh-CN.pak') fs.unlinkSync(localeDir + files[i]);
   }
 }
