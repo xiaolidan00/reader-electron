@@ -54,18 +54,17 @@
 ```js
 downloadArtifact({
   version,
-  artifactName: 'electron',
-  force: process.env.force_no_cache === 'true',
+  artifactName: "electron",
+  force: process.env.force_no_cache === "true",
   cacheRoot: process.env.electron_config_cache,
   checksums:
-    process.env.electron_use_remote_checksums ??
-    process.env.npm_config_electron_use_remote_checksums
+    process.env.electron_use_remote_checksums ?? process.env.npm_config_electron_use_remote_checksums
       ? undefined
-      : require('./checksums.json'),
+      : require("./checksums.json"),
   platform,
   arch,
   mirrorOptions: {
-    mirror: 'http://npmmirror.com/mirrors/electron/'
+    mirror: "http://npmmirror.com/mirrors/electron/"
   }
 })
   .then(extractFile)
@@ -97,10 +96,10 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 `removeLocales.js`
 
 ```js
-import fs from 'node:fs';
+import fs from "node:fs";
 
 export default function (context) {
-  const localeDir = context.appOutDir + '/locales/';
+  const localeDir = context.appOutDir + "/locales/";
   const files = fs.readdirSync(localeDir);
   if (!(files && files.length)) return;
   for (let i = 0, len = files.length; i < len; i++) {
@@ -117,3 +116,4 @@ export default function (context) {
 - ipcRenderer.off 和 removeListener 调用会失败，没法注销事件监听，只能强行全部监听移除，这什么鬼 Bug
 - node 版本 18.20.2
 - 包管理 yarn
+- electron-builder 打包报错 Fatal error: Unable to commit changes 把电脑管家等关闭即可
