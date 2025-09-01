@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && electron-builder",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build32": "vite build &&electron-builder --win --ia32"
   },
   "dependencies": {
     "encoding": "^0.1.13",

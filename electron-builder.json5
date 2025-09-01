@@ -1,40 +1,40 @@
 // @see - https://www.electron.build/configuration/configuration
 {
-  $schema: 'https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json',
-  appId: 'reader-electron',
-  asar: true,
-  productName: 'Txt阅读器',
+  $schema: "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  appId: "xld.txt.reader",
+  asar: false,
+  productName: "Txt阅读器",
   directories: {
-    output: 'release/${version}'
+    output: "release/${version}"
   },
-  files: ['dist', 'dist-electron'],
-  afterPack: './removeLocales.js',
+  files: ["dist", "dist-electron"],
+  afterPack: "./removeLocales.js",
   mac: {
-    target: ['dmg'],
-    artifactName: '${productName}-mac-${arch}-${version}.${ext}'
+    target: ["dmg"],
+    artifactName: "${productName}-mac-${arch}-${version}.${ext}"
   },
   win: {
     target: [
       {
-        target: 'nsis',
-        arch: ['x64']
+        target: "nsis",
+        arch: ["x64"]
       },
       {
-        target: 'nsis',
-        arch: ['ia32']
+        target: "nsis",
+        arch: ["ia32"]
       }
     ],
-    icon: 'public/logo.png',
-    artifactName: '${productName}-win-${arch}-${version}.${ext}'
+    icon: "public/logo.png",
+    artifactName: "${productName}-win-${arch}-${version}.${ext}"
   },
   nsis: {
     oneClick: false,
     perMachine: false,
     allowToChangeInstallationDirectory: true,
-    deleteAppDataOnUninstall: false
+    deleteAppDataOnUninstall: true
   },
   linux: {
-    target: ['AppImage'],
-    artifactName: '${productName}-linux-${arch}-${version}.${ext}'
+    target: ["AppImage"],
+    artifactName: "${productName}-linux-${arch}-${version}.${ext}"
   }
 }
