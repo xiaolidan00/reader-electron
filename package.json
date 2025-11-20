@@ -12,12 +12,12 @@
     "build32": "vite build &&electron-builder --win --ia32"
   },
   "dependencies": {
-    "encoding": "^0.1.13",
-    "jschardet": "^3.1.4",
     "lodash-es": "^4.17.21",
     "vue": "^3.5.14"
   },
   "devDependencies": {
+    "iconv-lite": "^0.7.0",
+    "jschardet": "^3.1.4",
     "@types/lodash-es": "^4.17.12",
     "@vitejs/plugin-vue": "^5.0.4",
     "electron": "^30.0.1",
