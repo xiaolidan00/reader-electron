@@ -43,6 +43,11 @@
 - 文本内容排版优化
 - 打包体积优化，只保留中文语言包
 
+## v1.0.6
+
+- 统一 web 端和 electron 代码
+- 字体大小和行高设置
+
 # electron 开发问题
 
 ## pnpm install electron node install 失败
@@ -110,7 +115,7 @@ export default function (context) {
 
 ## 注意事项
 
-- 要在管理员的命令行窗口执行`npm run build`
+- 要在管理员的命令行窗口执行`npm run build`或者以管理员身份运行 build.bat
 - logo 图标一定要用 大小为 256x256 的 png/jpg/ico 图片，不能用 svg
 - css 使用图片资源地址`url(/aaa.svg)`
 - ipcRenderer.off 和 removeListener 调用会失败，没法注销事件监听，只能强行全部监听移除，这什么鬼 Bug
