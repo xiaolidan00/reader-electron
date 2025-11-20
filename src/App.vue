@@ -4,16 +4,22 @@
   import Book from "./components/Book.vue";
   import {selectBook, loading} from "./config";
 
+  // import VConsole from "vconsole";
+
+  // const vConsole = new VConsole();
   const currentPart = computed(() => {
     return selectBook.value ? Book : List;
   });
+  // const onAction = (data: any) => {
+  //   EventBus.emit("bookAction", data);
+  // };
+  // window.ipcRenderer.on("bookAction", onAction);
 </script>
 
 <template>
   <component :is="currentPart"></component>
   <div class="loading" v-show="loading"><i class="loading-icon"></i></div>
 </template>
-
 <style lang="scss" scoped>
   .loading {
     position: fixed;

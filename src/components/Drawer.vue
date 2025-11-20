@@ -1,6 +1,6 @@
 <template>
   <div class="drawer-bg" v-show="show">
-    <div class="drawer-blank" @click="onHide()"></div>
+    <div class="drawer-blank" @click.self="onHide()"></div>
     <div class="drawer-body">
       <slot></slot>
     </div>
@@ -8,11 +8,11 @@
 </template>
 
 <script setup lang="ts">
-  import { watch } from 'vue';
-  const props = withDefaults(defineProps<{ show: boolean; onShow?: Function }>(), {
+  import {watch} from "vue";
+  const props = withDefaults(defineProps<{show: boolean; onShow?: Function}>(), {
     show: false
   });
-  const emit = defineEmits(['hide']);
+  const emit = defineEmits(["hide"]);
 
   watch(
     () => props.show,
@@ -24,6 +24,6 @@
   );
 
   const onHide = () => {
-    emit('hide', false);
+    emit("hide", false);
   };
 </script>

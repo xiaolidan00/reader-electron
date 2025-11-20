@@ -6,25 +6,15 @@
       {{ currentChapter + 1 }} /{{ chapterList.length }}
     </div>
 
-    <div class="book-container" id="bookContainer" @mousedown.stop="onDown" @mouseup.stop="onPageAction">
+    <div class="book-container" id="bookContainer" @click="onClickPage">
       <div class="chapter-title" v-if="chapterList.length && currentIndex == 0 && chapterList[currentChapter]">
         {{ chapterList[currentChapter].title }}
       </div>
-      <div
-        class="book-content"
-        :style="{
-          height:
-            currentIndex == 0 && chapterList[currentChapter]
-              ? `calc(100% - ${20 + Math.ceil(chapterList[currentChapter].title.length / LineNum) * 24}px)`
-              : ''
-        }"
-        id="contenTxt"
-        v-html="state.showContent"
-      ></div>
+      <div class="book-content" id="contenTxt" v-html="state.showContent"></div>
     </div>
     <div class="book-bottom">
       <i class="book-icon" title="章节目录" @click="state.isMenu = true"></i>
-      <i class="listen-icon" title="听书" @click="state.isListen = true"></i>
+      <i :class="['listen-icon', isPlay ? 'active' : '']" title="听书" @click="state.isListen = true"></i>
       <i class="search-icon" title="搜索关键词" @click="state.isSearch = true"></i>
       <i class="setting-icon" title="读书设置" @click="state.isSet = true"></i>
       <i class="save-icon" @click="onSaveTxt()" title="另存为带章节目录TXT"></i>
@@ -41,18 +31,32 @@
     @index="changeIndex"
   ></ListenPage>
   <SearchPage v-model:is-search="state.isSearch" @item="onSearchItem"></SearchPage>
-  <SetPage v-model:is-set="state.isSet" @exportTxt="onSaveTxt"></SetPage>
+  <SetPage v-model:is-set="state.isSet" @exportTxt="onSaveTxt" @changeStyle="updateStyle"></SetPage>
 </template>
 
 <script setup lang="ts">
   import {ref, reactive, nextTick, onBeforeUnmount, onMounted} from "vue";
-  import type {ChapterType, SearchItemType} from "../../@types";
+  import type {ChapterType, SearchItemType} from "../@types";
   import SearchPage from "./SearchPage.vue";
   import ChapterPage from "./ChapterPage.vue";
   import ListenPage from "./ListenPage.vue";
   import SetPage from "./SetPage.vue";
-  import {PageNum, LineNum} from "../../data";
-  import {selectBook, loading, bookItem, chapterList, setHighlight, currentChapter, currentIndex} from "../config";
+
+  import {
+    selectBook,
+    LineNum,
+    PageNum,
+    loading,
+    bookItem,
+    chapterList,
+    setHighlight,
+    currentChapter,
+    currentIndex,
+    isPlay,
+    bookStyle
+  } from "../config.ts";
+  import Controller from "../controllers/Controller.ts";
+  import {EventBus} from "../utils/EventEmitter.ts";
 
   //<InstanceType<typeof ListenPage>>
   const listenRef = ref();
@@ -78,12 +82,13 @@
     isSearch: false,
     isSet: false
   });
-  const updateBook = () => {
-    window.ipcRenderer.send("readedTxt", {
-      id: selectBook.value + "",
-      chapter: currentChapter.value,
-      index: currentIndex.value
-    });
+  const updateBook = async () => {
+    await Controller.saveBook(
+      selectBook.value + "",
+      currentChapter.value,
+      currentIndex.value,
+      chapterList.value.length
+    );
   };
 
   const onSearchItem = async ({
@@ -101,8 +106,8 @@
 
     await nextTick();
     const contenTxt = document.getElementById("contenTxt")!;
-    const textNode = contenTxt.firstChild!;
-    setHighlight(textNode.textContent!.indexOf(searchKey), textNode, searchLen);
+    const textNode = contenTxt.firstChild;
+    if (textNode) setHighlight(textNode.textContent!.indexOf(searchKey), textNode, searchLen);
   };
   const onBack = () => {
     updateBook();
@@ -111,6 +116,7 @@
     state.isMenu = false;
     state.isListen = false;
     state.isSearch = false;
+    loading.value = false;
   };
 
   const preChapter = () => {
@@ -134,26 +140,21 @@
       onChapter(currentChapter.value - 1, 1);
     }
   };
-  let isMove = 0;
-  const onDown = (event: MouseEvent) => {
-    isMove = event.pageX;
+
+  const onClickPage = (event: MouseEvent) => {
+    const x = event.pageX;
+    const w = window.innerWidth;
+    const p = Math.round((100 * x) / w);
+
+    if (p >= 0 && p <= 35) {
+      prePage();
+    } else if (p >= 65 && p <= 100) {
+      nextPage();
+    } else {
+      state.isMenu = true;
+    }
   };
 
-  const onPageAction = (event: MouseEvent) => {
-    const x = event.pageX;
-    if (Math.abs(isMove - x) <= 10) {
-      const w = window.innerWidth;
-      if (x >= 0 && x <= w * 0.5) {
-        prePage();
-      } else {
-        nextPage();
-      }
-      // else {
-      //   state.isMenu = true;
-      // }
-    }
-    isMove = 0;
-  };
   const changeIndex = () => {
     getPage();
 
@@ -166,10 +167,9 @@
   };
   let titleLine = 0;
   const getPage = () => {
-    const a = currentIndex.value * PageNum - titleLine;
-    const b = (currentIndex.value + 1) * PageNum - titleLine;
+    const a = currentIndex.value * PageNum.value - titleLine;
+    const b = (currentIndex.value + 1) * PageNum.value - titleLine;
     state.showContent = state.detail.slice(a < 0 ? 0 : a, b).join("");
-    updateBook();
   };
 
   const onChapter = (i: number, type: 0 | 1 | 2) => {
@@ -177,12 +177,12 @@
     if (currentChapter.value > chapterList.value.length) {
       currentChapter.value = chapterList.value.length - 1;
     }
-    state.isMenu = false;
+    // state.isMenu = false;
     const t: ChapterType = chapterList.value[currentChapter.value];
-    titleLine = Math.ceil(t.title.length / LineNum);
+    titleLine = Math.ceil(t.title.length / LineNum.value);
 
     state.detail = t.content;
-    state.total = Math.ceil((t.content.length + titleLine) / PageNum);
+    state.total = Math.ceil((t.content.length + titleLine) / PageNum.value);
     if (type === 1) {
       currentIndex.value = state.total - 1;
     } else if (type === 2) {
@@ -197,10 +197,11 @@
   };
   const onChapterItem = (idx: number) => {
     onChapter(idx, 0);
+    state.isMenu = false;
   };
 
   let isFirst = true;
-  const onReadTxt = (_event: any, data: ChapterType[]) => {
+  const onReadTxt = (data: ChapterType[]) => {
     if (isFirst) {
       currentChapter.value = bookItem.value!.chapter;
       currentIndex.value = bookItem.value!.index;
@@ -211,7 +212,8 @@
       chapterList.value = data;
     } else {
       alert("章节解析失败");
-      loading.value = false;
+
+      onBack();
       return;
     }
 
@@ -235,7 +237,6 @@
       txt += `第${i}章 ` + t + "\n";
       txt += it.content.join("") + "\n";
     }
-
     const file = new File([txt], fileName, {type: "text/plain"});
     const dom = document.createElement("a");
     dom.download = fileName;
@@ -245,37 +246,34 @@
   };
   updateBook();
 
-  const backList = () => {
-    loading.value = false;
-    console.log("TXT DELETE");
-    selectBook.value = "";
-    alert("TXT已删除，不可阅读！");
+  const updateStyle = () => {
+    const container = document.getElementById("bookContainer")!;
+    const fontSize = bookStyle.fontSize * bookStyle.lineHeight;
+    LineNum.value = Math.floor((container.offsetWidth - 20) / bookStyle.fontSize);
+    PageNum.value = Math.floor((container.offsetHeight - 20) / fontSize);
+
+    document.documentElement.style.setProperty("--font", bookStyle.fontColor);
+    document.documentElement.style.setProperty("--bg", bookStyle.bg);
+    document.documentElement.style.setProperty("--font-size", bookStyle.fontSize + "px");
+    document.documentElement.style.setProperty("--line-height", bookStyle.lineHeight + "");
+    Controller.readTxt();
   };
 
-  const onKeyPress = (ev: KeyboardEvent) => {
-    switch (ev.code) {
-      case "ArrowDown":
-      case "ArrowLeft":
-        prePage();
-        break;
-      case "ArrowUp":
-      case "ArrowRight":
-        nextPage();
-        break;
-    }
-  };
-  window.ipcRenderer.send("getTxt", selectBook.value);
   onMounted(() => {
-    window.ipcRenderer.on("backList", backList);
-    window.ipcRenderer.on("readTxt", onReadTxt);
-    window.ipcRenderer.on("closeBook", updateBook);
-    window.addEventListener("keyup", onKeyPress);
+    window.history.pushState(null, "book", document.URL);
+    window.addEventListener("popstate", onBack, false);
+    updateStyle();
+    EventBus.on("readTxt", onReadTxt);
+    EventBus.on("backTxt", onBack);
+    window.addEventListener("beforeunload", updateBook);
   });
-  onBeforeUnmount(() => {
-    window.ipcRenderer.off("readTxt", onReadTxt);
-    window.ipcRenderer.off("closeBook", updateBook);
-    window.ipcRenderer.off("backList", backList);
-    window.removeEventListener("keyup", onKeyPress);
+  onBeforeUnmount(async () => {
+    await updateBook();
+    window.removeEventListener("popstate", onBack, false);
+    window.removeEventListener("beforeunload", updateBook);
+    EventBus.off("readTxt", onReadTxt);
+    EventBus.off("backTxt", onBack);
+    Controller.saveBook(selectBook.value + "", currentChapter.value, currentIndex.value, chapterList.value.length);
   });
 </script>
 
@@ -290,8 +288,8 @@
   .book-container {
     height: calc(100% - 90px);
     text-align: left;
-    line-height: 1.5;
-    font-size: var(--fontSize);
+    line-height: var(--line-height);
+    font-size: var(--font-size);
   }
   .book-content {
     height: 100%;
@@ -303,6 +301,7 @@
   .book-bottom {
     border-top: solid 1px rgba(0, 0, 0, 0.1);
     height: 40px;
+    background-color: antiquewhite;
     display: flex;
     align-items: center;
     padding: 0 10px;
@@ -312,6 +311,14 @@
       width: 20px;
       &:not(:last-child) {
         margin-right: 20px;
+      }
+      &.active {
+        border-radius: 50%;
+        height: 30px;
+        width: 30px;
+        padding: 5px;
+        border: solid 1px black;
+        filter: brightness(0%);
       }
     }
   }

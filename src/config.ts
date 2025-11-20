@@ -1,13 +1,19 @@
-import type { BookType, ChapterType } from '../@types';
+import type {BookType, ChapterType} from "./@types";
 
-import { ref } from 'vue';
+import {reactive, ref} from "vue";
 
-export const selectBook = ref('');
+export const selectBook = ref("");
 export const dataList = ref<Array<BookType>>([]);
 export const bookItem = ref<BookType>();
 export const chapterList = ref<ChapterType[]>([]);
-export const loading = ref<boolean>(true);
-export const listSearchKey = ref<string>('');
+export const loading = ref<boolean>(false);
+export const listSearchKey = ref<string>("");
+export const bookStyle = reactive({
+  fontSize: 18,
+  lineHeight: 1.5,
+  fontColor: "#505050",
+  bg: "#faebd7"
+});
 
 export const searchHighlight = new Highlight();
 CSS.highlights.set(`search-highlight`, searchHighlight);
@@ -25,3 +31,9 @@ export function removeHighlight(range: Range) {
 
 export const currentChapter = ref<number>(0);
 export const currentIndex = ref<number>(0);
+//每行多少个字
+export const LineNum = ref(20);
+//每页多少行
+export const PageNum = ref(20);
+//是否语音朗读
+export const isPlay = ref(false);

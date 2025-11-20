@@ -5,13 +5,7 @@
         {{ chapterList[currentChapter].title }}
       </div>
       <div class="progress">
-        <input
-          type="range"
-          v-model="currentIndex"
-          @click="changeIndex()"
-          :min="0"
-          :max="total - 1"
-        />
+        <input type="range" v-model="currentIndex" @click="changeIndex()" :min="0" :max="total - 1" />
       </div>
 
       <div class="control">
@@ -19,7 +13,7 @@
           <i class="pre-icon"></i>
         </span>
         <span @click="onPlay()">
-          <i :class="[state.isPlay ? 'stop-icon' : 'play-icon']"></i>
+          <i :class="[isPlay ? 'stop-icon' : 'play-icon']"></i>
         </span>
         <span @click="nextChapter()">
           <i class="next-icon"></i>
@@ -34,133 +28,103 @@
           >{{ item.name }}</span
         >
       </div>
-      <div class="voice">
-        <div
-          :class="[state.voice == i ? 'active' : '']"
-          @click="selectVoice(i)"
-          v-for="(item, i) in state.voices"
-          :key="i"
-        >
-          {{ item }}
-        </div>
-      </div>
     </div>
   </Drawer>
 </template>
 
 <script setup lang="ts">
-  import Drawer from './Drawer.vue';
-  import {
-    currentChapter,
-    chapterList,
-    currentIndex,
-    setHighlight,
-    removeHighlight
-  } from '../config';
-  import { reactive, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-  const emit = defineEmits(['update:isListen', 'index', 'pre', 'next', 'nextPage']);
-  let voiceList: any = [];
+  import Drawer from "./Drawer.vue";
+  import {currentChapter, chapterList, currentIndex, isPlay, removeHighlight, setHighlight} from "../config.ts";
+  import {reactive, onMounted, onBeforeUnmount, watch, nextTick} from "vue";
+
+  const emit = defineEmits(["update:isListen", "index", "pre", "next", "nextPage"]);
+
   const speeds = [
-    { name: '0.5X', value: 0.5 },
-    { name: '1.0X', value: 1 },
-    { name: '1.2X', value: 1.2 },
-    { name: '1.5X', value: 1.5 },
-    { name: '1.8X', value: 1.8 },
-    { name: '2.0X', value: 2 }
+    {name: "0.5X", value: 0.5},
+    {name: "1.0X", value: 1},
+    {name: "1.2X", value: 1.2},
+    {name: "1.5X", value: 1.5},
+    {name: "1.8X", value: 1.8},
+    {name: "2.0X", value: 2}
   ];
   type StateType = {
     voice: number;
-    voices: string[];
-    isPlay: boolean;
     speed: number;
   };
   const state = reactive<StateType>({
-    voice: Number(localStorage.getItem('voice')) || 0,
-    voices: [],
-    speed: Number(localStorage.getItem('speed')) || 1,
-    isPlay: false
+    voice: Number(localStorage.getItem("voice")) || 0,
+
+    speed: Number(localStorage.getItem("speed")) || 1
   });
-  const props = withDefaults(
+  withDefaults(
     defineProps<{
       isListen: boolean;
       total: number;
     }>(),
-    { isListen: false, total: 0 }
-  );
-  watch(
-    () => props.isListen,
-    (v: boolean) => {
-      if (v) {
-        if (voiceList.length == 0) {
-          alert('暂无TTS语音播报员，请在安装后使用');
-          state.isPlay = false;
-          emit('update:isListen', false);
-          return;
-        }
-      }
-    },
-    { immediate: true }
+    {isListen: false, total: 0}
   );
 
   const onHide = () => {
-    emit('update:isListen', false);
+    emit("update:isListen", false);
   };
   const changeIndex = () => {
-    emit('index', currentIndex.value);
+    emit("index", currentIndex.value);
   };
   const preChapter = () => {
-    emit('pre');
+    emit("pre");
   };
   const nextChapter = () => {
-    emit('next');
+    emit("next");
   };
   const stopPlay = () => {
-    state.isPlay = false;
+    isPlay.value = false;
     speechSynthesis.pause();
   };
-  const selectVoice = (i: number) => {
-    state.voice = i;
-    localStorage.setItem('voice', i + '');
-    if (state.isPlay) onSpeak();
-  };
+
   const onSpeed = (i: number) => {
     state.speed = i;
-    localStorage.setItem('speed', i + '');
-    if (state.isPlay) onSpeak();
+    localStorage.setItem("speed", i + "");
+    if (isPlay.value) onSpeak();
   };
   const onPlay = () => {
-    state.isPlay = !state.isPlay;
+    isPlay.value = !isPlay.value;
     onSpeak();
   };
-  const voiceSet: { txt: string; utterance?: SpeechSynthesisUtterance } = {
-    txt: ''
+  const voiceSet: {txt: string; utterance?: SpeechSynthesisUtterance} = {
+    txt: ""
   };
   let beforeRange: Range;
   const onSpeak = async () => {
     await nextTick();
 
-    if (state.isPlay) {
-      const contenTxt = document.getElementById('bookContainer')!;
+    if (isPlay.value) {
+      const contenTxt = document.getElementById("bookContainer")!;
       const str = contenTxt.innerText;
       if (voiceSet.txt != str) {
         speechSynthesis.cancel();
-        const t = new SpeechSynthesisUtterance(str.replace(/[\_\-\+=\*]+/g, ''));
-        t.voice = voiceList[state.voice];
+        const t = new SpeechSynthesisUtterance(str.replace(/[\_\-\+=\*]+/g, ""));
+
         t.rate = state.speed;
         t.volume = 100;
         speechSynthesis.speak(t);
         voiceSet.txt = str;
         voiceSet.utterance = t;
-
         t.onboundary = (e: SpeechSynthesisEvent) => {
-          const dom = document.getElementById('contenTxt')!;
+          const dom = document.getElementById("contenTxt")!;
           if (beforeRange) {
             removeHighlight(beforeRange);
           }
-          beforeRange = setHighlight(e.charIndex, dom.firstChild as Node, e.charLength);
+          const textNode = dom.firstChild;
+          if (textNode) beforeRange = setHighlight(e.charIndex, textNode, e.charLength);
         };
         t.onend = () => {
-          emit('nextPage');
+          emit("nextPage");
+        };
+        t.onerror = (err) => {
+          // console.log("🚀 ~ ListenPage.vue ~ onSpeak ~ err:", err);
+          isPlay.value = false;
+          speechSynthesis.cancel();
+          voiceSet.txt = "";
         };
       } else if (voiceSet.utterance) {
         speechSynthesis.resume();
@@ -169,17 +133,37 @@
       speechSynthesis.pause();
     }
   };
-  onMounted(() => {
-    navigator.mediaDevices.addEventListener('devicechange', stopPlay);
-    setTimeout(() => {
-      voiceList = speechSynthesis.getVoices() || [];
+  // const onVisibilitychange = () => {
+  //   if (isMobile() && !props.isListen) {
+  //     speechSynthesis.cancel();
+  //   }
+  // };
+  //按空格播放或停止
+  const onKeyup = (ev: KeyboardEvent) => {
+    if (ev.code === "Space") {
+      if (isPlay.value) {
+        onSpeak();
+      } else {
+        stopPlay();
+      }
+    }
+  };
 
-      state.voices = voiceList.map((it: any) => it.name);
-    }, 1000);
+  onMounted(() => {
+    // if (isMobile()) {
+    //   document.addEventListener("visibilitychange", onVisibilitychange);
+    // }
+    document.body.addEventListener("keyup", onKeyup);
+    navigator.mediaDevices.addEventListener("devicechange", stopPlay);
   });
   onBeforeUnmount(() => {
+    // if (isMobile()) {
+    //   document.removeEventListener("visibilitychange", onVisibilitychange);
+    // }
+    document.body.removeEventListener("keyup", onKeyup);
+    isPlay.value = false;
     speechSynthesis.cancel();
-    navigator.mediaDevices.removeEventListener('devicechange', stopPlay);
+    navigator.mediaDevices.removeEventListener("devicechange", stopPlay);
   });
   defineExpose({
     onSpeak
