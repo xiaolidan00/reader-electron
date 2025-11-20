@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "web": "vite --config ./vite.config.web.ts",
+    "buildweb": "vite build --config ./vite.config.web.ts",
     "build": "vite build && electron-builder",
     "preview": "vite preview",
     "build32": "vite build &&electron-builder --win --ia32"

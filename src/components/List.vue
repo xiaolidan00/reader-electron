@@ -180,7 +180,7 @@
     <i v-if="state.isEdit" :class="['check', state.isAll ? 'active' : '']" @click="onAll()"></i>
     <button :class="[state.isEdit ? 'active' : '']" @click="onBatch">批量操作</button>
     <button v-if="state.isEdit" @click="onDelTxt()">删除记录</button>
-    <button v-if="state.isEdit" @click="onDelTxt(true)">删除文件</button>
+    <button v-if="state.isEdit && isElectron()" @click="onDelTxt(true)">删除文件</button>
   </div>
   <div class="book-list">
     <div class="book-item" v-for="item in showDataList" :key="item.name">
@@ -215,7 +215,7 @@
 
         <div class="bottom-action">
           <span @click="onDelOneTxt()">删除记录</span>
-          <span @click="onDelOneTxt(true)">删除文件</span>
+          <span @click="onDelOneTxt(true)" v-if="isElectron()">删除文件</span>
         </div>
       </div>
     </div>

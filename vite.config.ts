@@ -14,6 +14,7 @@ export default defineConfig({
         entry: "electron/main.ts"
         // onstart({startup}) {
         //   if (process.env.NODE_ENV === "development")
+        // startup([".", "--inspect"]);
         //     startup([".", "--inspect-brk=5858", "--remote-debugging-port=9222"]);
         // }
       },
