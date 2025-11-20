@@ -49,7 +49,7 @@
               <input v-model="state.regex" :disabled="state.regexType != -2" @change="onRegex" type="text" />
             </td>
           </tr>
-          <tr>
+          <tr v-if="!isElectron()">
             <td>编码方式</td>
             <td>
               <select v-model="state.encode" @change="onEncode">
@@ -82,6 +82,7 @@
   import {bookItem, bookStyle} from "../config.ts";
   import {reactive} from "vue";
   import Controller from "../controllers/Controller.ts";
+  import {isElectron} from "../utils/utils.ts";
 
   const state = reactive({
     regexType: bookItem.value!.regexType ?? -1,

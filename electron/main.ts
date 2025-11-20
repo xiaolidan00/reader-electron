@@ -1,10 +1,11 @@
 import {BrowserWindow, app, ipcMain} from "electron";
-
+import jschardet from "jschardet";
 import {createRequire} from "node:module";
 import {BOOKLIST} from "./config";
 import {fileURLToPath} from "node:url";
 import fs from "node:fs";
 import path from "node:path";
+import iconv from "iconv-lite";
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -66,13 +67,10 @@ function createWindow() {
   ipcMain.on("getFile", (ev: any, op: any) => {
     if (fs.existsSync(op.data.path)) {
       try {
-        const buf = fs
-          .readFileSync(op.data.path, {
-            encoding: op.data.encode
-          })
-          .toString();
-
-        win.webContents.send(op.cb, buf);
+        let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
+        const {encoding} = jschardet.detect(buf);
+        buf = iconv.decode(buf, encoding);
+        win.webContents.send(op.cb, buf.toString());
       } catch (error) {
         win.webContents.send(op.cb, "");
       }

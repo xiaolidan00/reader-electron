@@ -56,12 +56,12 @@ export const waitAction = (sendAction: {eventName: string; data?: any}, receive?
         reject("timeout");
       }, 10000);
       window.ipcRenderer.once(cbId, (_event: any, data: any) => {
-        console.log("🚀 ~ Controller.ts ~ waitAction", sendAction.eventName, sendAction.data, data);
+        // console.log("🚀 ~ Controller.ts ~ waitAction", sendAction.eventName, sendAction.data, data);
         clearTimeout(t);
         resolve(data);
       });
     }
-    console.log("sendAction.eventName", sendAction.eventName, sendAction.data);
+    // console.log("sendAction.eventName", sendAction.eventName, sendAction.data);
     window.ipcRenderer.send(sendAction.eventName, {
       cb: cbId,
       data: sendAction.data
@@ -233,6 +233,7 @@ export default {
     const idx = dataList.value.findIndex((a) => a.id === selectBook.value);
     if (idx < 0) return;
     const data = dataList.value[idx];
+    console.log("readTxt", data);
     if (!isElectron()) {
       loading.value = true;
 
@@ -251,8 +252,7 @@ export default {
           {
             eventName: "getFile",
             data: {
-              path: bookItem.value!.path,
-              encode: data.encode || "UTF-8"
+              path: data!.path
             }
           },
           true
@@ -264,8 +264,9 @@ export default {
   },
   readTxtContent(result: string, isFlag?: boolean) {
     if (!result) {
+      alert("读取txt失败");
       // EventBus.emit("backTxt");
-
+      loading.value = false;
       return;
     }
     const idx = dataList.value.findIndex((a) => a.id === selectBook.value);
@@ -273,7 +274,15 @@ export default {
     const txt = result;
 
     const first3000 = txt.substring(0, 3000);
-    if (!isFlag && first3000.indexOf("�") >= 0) return this.changeEncode("GBK");
+    console.log("🚀 ~ Controller.ts ~ first100:", txt.substring(0, 100));
+    if (first3000.indexOf("�") >= 0) {
+      alert("解析txt失败,请修改编码方式");
+      loading.value = false;
+      return;
+    }
+    // if (!isFlag && first3000.indexOf("�") >= 0) return this.changeEncode("GBK");
+    // if (!isFlag && first3000.indexOf("�") >= 0) return this.changeEncode("GB2312");
+
     const lines = txt.replace(/\r|\t/g, "").split("\n");
 
     let newTitle = "";

@@ -18,5 +18,7 @@ export const chapterRegex = [
 
 export const encodeList = [
   {label: "UTF-8", value: "UTF-8"},
+  // {label: "UTF-16", value: "UTF-16"},
   {label: "GBK", value: "GBK"}
+  // {label: "GB2312", value: "GB2312"}
 ];
