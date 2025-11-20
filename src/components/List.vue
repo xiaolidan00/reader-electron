@@ -22,7 +22,16 @@
         prop: "size",
         formatter: formatNum
       },
-      {name: "最近阅读", prop: "updateTime"}
+      {
+        name: "最近阅读",
+        prop: "updateTime",
+        formatter: (v: number) => {
+          const d = new Date(v);
+          return `${d.getFullYear()}-${
+            d.getMonth() + 1
+          }-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+        }
+      }
     ];
     if (isElectron()) {
       list.push({
@@ -209,7 +218,15 @@
         <table class="detail-table">
           <tr v-for="(item, idx) in detailSet" :key="idx">
             <td>{{ item.name }}</td>
-            <td>{{ item.idx ? (bookItem[item.prop] as number) + 1 : bookItem[item.prop] }}</td>
+            <td>
+              {{
+                item.idx
+                  ? (bookItem[item.prop] as number) + 1
+                  : item.formatter
+                  ? item.formatter(bookItem[item.prop])
+                  : bookItem[item.prop]
+              }}
+            </td>
           </tr>
         </table>
 

@@ -258,6 +258,9 @@
     document.documentElement.style.setProperty("--line-height", bookStyle.lineHeight + "");
     Controller.readTxt();
   };
+  const onUnload = async () => {
+    await updateBook();
+  };
 
   onMounted(() => {
     window.history.pushState(null, "book", document.URL);
@@ -265,12 +268,12 @@
     updateStyle();
     EventBus.on("readTxt", onReadTxt);
     EventBus.on("backTxt", onBack);
-    window.addEventListener("beforeunload", updateBook);
+    window.onunload = onUnload;
   });
   onBeforeUnmount(async () => {
     await updateBook();
     window.removeEventListener("popstate", onBack, false);
-    window.removeEventListener("beforeunload", updateBook);
+
     EventBus.off("readTxt", onReadTxt);
     EventBus.off("backTxt", onBack);
     Controller.saveBook(selectBook.value + "", currentChapter.value, currentIndex.value, chapterList.value.length);

@@ -104,13 +104,16 @@ export default {
     if (files?.length) {
       for (let i = 0; i < files.length; i++) {
         const f = files[i];
-
+        let id;
         if (!isElectron()) {
           fileMap[f.name] = f;
+          id = f.name;
+        } else {
+          id = f.path.replace(/[\.|\:\\]/g, "_");
         }
 
         let data: BookType;
-        const id = f.path.replace(/[\.|\:\\]/g, "_");
+
         const idx = dataList.value.findIndex((a) => a.id === id);
         if (idx >= 0) {
           data = dataList.value[idx];
