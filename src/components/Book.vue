@@ -6,7 +6,7 @@
       {{ currentChapter + 1 }} /{{ chapterList.length }}
     </div>
 
-    <div class="book-container" id="bookContainer" @click="onClickPage">
+    <div class="book-container" ref="bookContainer" id="bookContainer" @click="onClickPage">
       <div class="chapter-title" v-if="chapterList.length && currentIndex == 0 && chapterList[currentChapter]">
         {{ chapterList[currentChapter].title }}
       </div>
@@ -57,9 +57,11 @@
   } from "../config.ts";
   import Controller from "../controllers/Controller.ts";
   import {EventBus} from "../utils/EventEmitter.ts";
+  import {isMobile} from "../utils/utils.ts";
 
   //<InstanceType<typeof ListenPage>>
   const listenRef = ref();
+  const bookContainer = ref<HTMLDivElement>();
   loading.value = true;
 
   type StateType = {
@@ -142,16 +144,18 @@
   };
 
   const onClickPage = (event: MouseEvent) => {
-    const x = event.pageX;
-    const w = window.innerWidth;
-    const p = Math.round((100 * x) / w);
+    if (!isMobile()) {
+      const x = event.pageX;
+      const w = window.innerWidth;
+      const p = Math.round((100 * x) / w);
 
-    if (p >= 0 && p <= 35) {
-      prePage();
-    } else if (p >= 65 && p <= 100) {
-      nextPage();
-    } else {
-      state.isMenu = true;
+      if (p >= 0 && p <= 35) {
+        prePage();
+      } else if (p >= 65 && p <= 100) {
+        nextPage();
+      } else {
+        state.isMenu = true;
+      }
     }
   };
 
@@ -261,6 +265,52 @@
   const onUnload = async () => {
     await updateBook();
   };
+  const mobilePos = {
+    x: 0,
+
+    offsetX: 0
+  };
+  const onMouseDown = (ev: TouchEvent) => {
+    // console.log("🚀 ~ Book.vue ~ onMouseDown ~ ev:", ev.targetTouches[0]);
+    // mobilePos.x = ev.pageX;
+    mobilePos.x = ev.targetTouches[0].clientX;
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+  const onMouseMove = (ev: TouchEvent) => {
+    // console.log("🚀 ~ Book.vue ~ onMouseMove ~ ev:", ev.targetTouches[0]);
+    // const x = ev.pageX;
+    const x = ev.targetTouches[0].clientX;
+    mobilePos.offsetX += x - mobilePos.x;
+
+    mobilePos.x = x;
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+  const onMouseUp = (ev: TouchEvent) => {
+    // console.log("🚀 ~ Book.vue ~ onMouseUp ~ ev:", mobilePos.offsetX, mobilePos.x);
+    if (Math.abs(mobilePos.offsetX) > 10) {
+      if (mobilePos.offsetX < -10) {
+        nextPage();
+      } else if (mobilePos.offsetX > 10) {
+        prePage();
+      }
+    } else {
+      const x = mobilePos.x;
+      const w = window.innerWidth;
+      const p = Math.round((100 * x) / w);
+
+      if (p >= 0 && p <= 35) {
+        prePage();
+      } else if (p >= 65 && p <= 100) {
+        nextPage();
+      } else {
+        state.isMenu = true;
+      }
+    }
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
 
   onMounted(() => {
     window.history.pushState(null, "book", document.URL);
@@ -269,8 +319,26 @@
     EventBus.on("readTxt", onReadTxt);
     EventBus.on("backTxt", onBack);
     window.onunload = onUnload;
+    if (isMobile()) {
+      const dom = bookContainer.value!;
+      dom.addEventListener("touchstart", onMouseDown, {passive: false});
+      dom.addEventListener("touchmove", onMouseMove, {passive: false});
+      dom.addEventListener("touchend", onMouseUp, {passive: false});
+      window.ontouchstart = null;
+      window.ontouchmove = null;
+      window.ontouchend = null;
+      document.body.ontouchstart = null;
+      document.body.ontouchmove = null;
+      document.body.ontouchend = null;
+    }
   });
   onBeforeUnmount(async () => {
+    if (isMobile()) {
+      const dom = bookContainer.value!;
+      dom.removeEventListener("touchstart", onMouseDown);
+      dom.removeEventListener("touchmove", onMouseMove);
+      dom.removeEventListener("touchend", onMouseUp);
+    }
     await updateBook();
     window.removeEventListener("popstate", onBack, false);
 
@@ -300,6 +368,7 @@
     padding: 10px;
     overflow: hidden;
     white-space: pre-wrap;
+    pointer-events: none;
   }
   .book-bottom {
     border-top: solid 1px rgba(0, 0, 0, 0.1);

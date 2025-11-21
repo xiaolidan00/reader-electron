@@ -103,6 +103,7 @@
     emit("update:isSet", false);
   };
   const onChangeStyle = () => {
+    localStorage.setItem("bookStyle", JSON.stringify(bookStyle));
     emit("changeStyle");
   };
   const onEncode = () => {

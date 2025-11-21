@@ -8,12 +8,19 @@ export const bookItem = ref<BookType>();
 export const chapterList = ref<ChapterType[]>([]);
 export const loading = ref<boolean>(false);
 export const listSearchKey = ref<string>("");
-export const bookStyle = reactive({
-  fontSize: 18,
-  lineHeight: 1.5,
-  fontColor: "#505050",
-  bg: "#faebd7"
-});
+
+let bStyle;
+if (localStorage.getItem("bookStyle")) {
+  bStyle = JSON.parse(localStorage.getItem("bookStyle") as string);
+} else {
+  bStyle = {
+    fontSize: 18,
+    lineHeight: 2,
+    fontColor: "#505050",
+    bg: "#faebd7"
+  };
+}
+export const bookStyle = reactive(bStyle);
 
 export const searchHighlight = new Highlight();
 CSS.highlights.set(`search-highlight`, searchHighlight);
