@@ -157,12 +157,10 @@
       const w = window.innerWidth;
       const p = Math.round((100 * x) / w);
 
-      if (p >= 0 && p <= 35) {
+      if (p >= 0 && p <= 50) {
         prePage();
-      } else if (p >= 65 && p <= 100) {
+      } else if (p > 50 && p <= 100) {
         nextPage();
-      } else {
-        state.isMenu = true;
       }
     }
   };
@@ -307,12 +305,10 @@
       const w = window.innerWidth;
       const p = Math.round((100 * x) / w);
 
-      if (p >= 0 && p <= 35) {
+      if (p >= 0 && p <= 50) {
         prePage();
-      } else if (p >= 65 && p <= 100) {
+      } else if (p > 50 && p <= 100) {
         nextPage();
-      } else {
-        state.isMenu = true;
       }
     }
     ev.preventDefault();
