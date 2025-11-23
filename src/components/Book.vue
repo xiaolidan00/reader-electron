@@ -169,8 +169,7 @@
 
   const changeIndex = () => {
     getPage();
-
-    listenRef.value!.onSpeak();
+    if (listenRef.value) listenRef.value.onSpeak();
   };
   const nextChapter = () => {
     if (currentChapter.value < chapterList.value.length) {
@@ -320,9 +319,23 @@
     ev.stopPropagation();
   };
 
+  const onKeyup = debounce((ev: KeyboardEvent) => {
+    if (ev.key === 'ArrowRight') {
+      nextPage();
+    } else if (ev.key === 'ArrowLeft') {
+      prePage();
+    } else if (ev.code === 'Space' && listenRef.value) {
+      if (isPlay.value) {
+        listenRef.value.onSpeak();
+      } else {
+        listenRef.value.stopPlay();
+      }
+    }
+  }, 100);
   onMounted(() => {
     window.history.pushState(null, 'book', document.URL);
     window.addEventListener('popstate', onBack, false);
+
     updateStyle();
     EventBus.on('readTxt', onReadTxt);
     EventBus.on('backTxt', onBack);
@@ -339,6 +352,7 @@
       document.body.ontouchmove = null;
       document.body.ontouchend = null;
     }
+    document.body.addEventListener('keyup', onKeyup);
   });
   onBeforeUnmount(async () => {
     if (isMobile()) {
@@ -347,6 +361,7 @@
       dom.removeEventListener('touchmove', onMouseMove);
       dom.removeEventListener('touchend', onMouseUp);
     }
+    document.body.removeEventListener('keyup', onKeyup);
     await updateBook();
     window.removeEventListener('popstate', onBack, false);
 
