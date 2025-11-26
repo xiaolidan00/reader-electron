@@ -49,7 +49,7 @@
               <input v-model="state.regex" :disabled="state.regexType != -2" @change="onRegex" type="text" />
             </td>
           </tr>
-          <tr v-if="!isElectron()">
+          <tr>
             <td>编码方式</td>
             <td>
               <select v-model="state.encode" @change="onEncode">

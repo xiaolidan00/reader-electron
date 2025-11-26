@@ -67,10 +67,19 @@ function createWindow() {
   ipcMain.on("getFile", (ev: any, op: any) => {
     if (fs.existsSync(op.data.path)) {
       try {
-        let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
-        const {encoding} = jschardet.detect(buf);
-        buf = iconv.decode(buf, encoding);
-        win.webContents.send(op.cb, buf.toString());
+        if (op.data.encode === "auto") {
+          let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
+          const {encoding} = jschardet.detect(buf);
+          buf = iconv.decode(buf, encoding);
+          win.webContents.send(op.cb, buf.toString());
+        } else if (op.data.encode) {
+          let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
+          buf = iconv.decode(buf, op.data.encode);
+          win.webContents.send(op.cb, buf.toString());
+        } else {
+          let buf = fs.readFileSync(op.data.path);
+          win.webContents.send(op.cb, buf.toString());
+        }
       } catch (error) {
         win.webContents.send(op.cb, "");
       }
