@@ -79,10 +79,9 @@
 <script setup lang="ts">
   import Drawer from "./Drawer.vue";
   import {chapterRegex, encodeList} from "../data";
-  import {bookItem, bookStyle} from "../config.ts";
+  import {bookItem, bookStyle, currentChapter, currentIndex} from "../config.ts";
   import {reactive} from "vue";
   import Controller from "../controllers/Controller.ts";
-  import {isElectron} from "../utils/utils.ts";
 
   const state = reactive({
     regexType: bookItem.value!.regexType ?? -1,
@@ -108,6 +107,8 @@
   };
   const onEncode = () => {
     bookItem.value!.encode = state.encode;
+    currentChapter.value = 0;
+    currentIndex.value = 0;
     Controller.changeEncode(state.encode);
   };
   const onRegex = () => {
@@ -115,7 +116,8 @@
     if (state.regexType >= 0) {
       state.regex = chapterRegex[state.regexType].value;
     }
-
+    currentChapter.value = 0;
+    currentIndex.value = 0;
     Controller.changeRegex({regex: state.regex, regexType: state.regexType});
   };
 

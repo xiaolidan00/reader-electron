@@ -207,9 +207,10 @@
 
   let isFirst = true;
   const onReadTxt = (data: ChapterType[]) => {
-    if (isFirst) {
-      currentChapter.value = bookItem.value!.chapter;
-      currentIndex.value = bookItem.value!.index;
+    if (isFirst && bookItem.value) {
+      currentChapter.value = bookItem.value.chapter;
+      currentIndex.value = bookItem.value.index;
+      console.log("chapter", currentChapter.value, "index", currentIndex.value);
       isFirst = false;
     }
 
@@ -249,7 +250,6 @@
     document.body.appendChild(dom);
     dom.click();
   };
-  updateBook();
 
   const updateStyle = () => {
     const container = document.getElementById("bookContainer")!;
