@@ -153,8 +153,12 @@ export default {
   async delTxt(delBooks: Record<string, boolean>, isFile?: boolean) {
     const files: string[] = [];
     dataList.value = dataList.value.filter((a) => {
-      files.push(a.path);
-      return !delBooks[a.id];
+      if (delBooks[a.id]) {
+        files.push(a.path);
+        return false;
+      }
+
+      return true;
     });
     save(dataList.value);
     if (isFile) {
