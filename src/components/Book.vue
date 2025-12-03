@@ -25,8 +25,9 @@
     ref="listenRef"
     v-model:is-listen="state.isListen"
     :total="state.total"
-    @pre="preChapter"
-    @next="nextChapter"
+    @preChapter="preChapter"
+    @nextChapter="nextChapter"
+    @prePage="prePage"
     @nextPage="nextPage"
     @index="changeIndex"
   ></ListenPage>

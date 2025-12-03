@@ -74,6 +74,15 @@ body,
   display: inline-block;
   content: url(./images/next.svg);
 }
+.arrow-icon {
+  display: inline-block;
+  content: url(./images/arrow.svg);
+}
+.arrow-icon.reverse {
+  display: inline-block;
+  transform: rotate(180deg);
+  content: url(./images/arrow.svg);
+}
 .stop-icon {
   display: inline-block;
   content: url(./images/stop.svg);
