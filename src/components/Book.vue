@@ -24,7 +24,6 @@
   <ListenPage
     ref="listenRef"
     v-model:is-listen="state.isListen"
-    :total="state.total"
     @preChapter="preChapter"
     @nextChapter="nextChapter"
     @prePage="prePage"
@@ -36,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-  import {ref, reactive, nextTick, onBeforeUnmount, onMounted} from "vue";
+  import {ref, nextTick, onBeforeUnmount, onMounted} from "vue";
   import type {ChapterType, SearchItemType} from "../@types";
   import SearchPage from "./SearchPage.vue";
   import ChapterPage from "./ChapterPage.vue";
@@ -54,38 +53,20 @@
     currentChapter,
     currentIndex,
     isPlay,
-    bookStyle
+    bookStyle,
+    bookState as state,
+    defaultBookState
   } from "../config.ts";
   import Controller from "../controllers/Controller.ts";
   import {EventBus} from "../utils/EventEmitter.ts";
   import {isMobile} from "../utils/utils.ts";
-  import {debounce} from "lodash-es";
+  import {cloneDeep, debounce} from "lodash-es";
 
   //<InstanceType<typeof ListenPage>>
   const listenRef = ref();
   const bookContainer = ref<HTMLDivElement>();
   loading.value = true;
 
-  type StateType = {
-    title: string;
-    isMenu: boolean;
-    isListen: boolean;
-    total: number;
-    showContent: string;
-    detail: string[];
-    isSearch: boolean;
-    isSet: boolean;
-  };
-  const state = reactive<StateType>({
-    title: bookItem.value!.name,
-    isMenu: false,
-    detail: [],
-    showContent: "",
-    total: 0,
-    isListen: false,
-    isSearch: false,
-    isSet: false
-  });
   const updateBook = async () => {
     await Controller.saveBook(
       selectBook.value + "",
@@ -113,6 +94,7 @@
     const textNode = contenTxt.firstChild;
     if (textNode) setHighlight(textNode.textContent!.indexOf(searchKey), textNode, searchLen);
   };
+
   const onBack = () => {
     updateBook();
     selectBook.value = "";
@@ -120,9 +102,7 @@
     currentChapter.value = 0;
     currentIndex.value = 0;
     chapterList.value = [];
-    state.isMenu = false;
-    state.isListen = false;
-    state.isSearch = false;
+    state.value = cloneDeep(defaultBookState);
     loading.value = false;
   };
 
@@ -132,7 +112,7 @@
     }
   };
   const nextPage = debounce(() => {
-    if (currentIndex.value + 1 < state.total) {
+    if (currentIndex.value + 1 < state.value.total) {
       currentIndex.value++;
       changeIndex();
     } else if (currentChapter.value + 1 < chapterList.value.length) {
@@ -175,7 +155,7 @@
   const getPage = () => {
     const a = currentIndex.value * PageNum.value - titleLine;
     const b = (currentIndex.value + 1) * PageNum.value - titleLine;
-    state.showContent = state.detail.slice(a < 0 ? 0 : a, b).join("");
+    state.value.showContent = state.value.detail.slice(a < 0 ? 0 : a, b).join("");
   };
 
   const onChapter = (i: number, type: 0 | 1 | 2) => {
@@ -187,12 +167,12 @@
     const t: ChapterType = chapterList.value[currentChapter.value];
     titleLine = Math.ceil(t.title.length / LineNum.value);
 
-    state.detail = t.content;
-    state.total = Math.ceil((t.content.length + titleLine) / PageNum.value);
+    state.value.detail = t.content as string[];
+    state.value.total = Math.ceil((t.content.length + titleLine) / PageNum.value);
     if (type === 1) {
-      currentIndex.value = state.total - 1;
+      currentIndex.value = state.value.total - 1;
     } else if (type === 2) {
-      if (currentIndex.value >= 0 && currentIndex.value < state.total) {
+      if (currentIndex.value >= 0 && currentIndex.value < state.value.total) {
       } else {
         currentIndex.value = 0;
       }
@@ -203,12 +183,13 @@
   };
   const onChapterItem = (idx: number) => {
     onChapter(idx, 0);
-    state.isMenu = false;
+    state.value.isMenu = false;
   };
 
   let isFirst = true;
   const onReadTxt = (data: ChapterType[]) => {
     if (isFirst && bookItem.value) {
+      state.value.title = bookItem.value!.name;
       currentChapter.value = bookItem.value.chapter;
       currentIndex.value = bookItem.value.index;
       console.log("chapter", currentChapter.value, "index", currentIndex.value);
@@ -347,6 +328,7 @@
     }
     document.body.addEventListener("keyup", onKeyup);
   });
+
   onBeforeUnmount(async () => {
     if (isMobile()) {
       const dom = bookContainer.value!;

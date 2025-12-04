@@ -4,8 +4,9 @@
       <div class="title" v-if="chapterList.length && chapterList[currentChapter]">
         {{ chapterList[currentChapter].title }}
       </div>
+      <div style="padding: 10px; text-align: center">{{ currentIndex + 1 }}/{{ bookState.total }}</div>
       <div class="progress">
-        <input type="range" v-model="currentIndex" @click="changeIndex()" :min="0" :max="total - 1" />
+        <input type="range" v-model="currentIndex" @click="changeIndex()" :min="0" :max="bookState.total - 1" />
       </div>
 
       <div class="control">
@@ -40,8 +41,16 @@
 
 <script setup lang="ts">
   import Drawer from "./Drawer.vue";
-  import {currentChapter, chapterList, currentIndex, isPlay, removeHighlight, setHighlight} from "../config.ts";
-  import {reactive, onMounted, onBeforeUnmount, watch, nextTick} from "vue";
+  import {
+    currentChapter,
+    chapterList,
+    currentIndex,
+    isPlay,
+    removeHighlight,
+    setHighlight,
+    bookState
+  } from "../config.ts";
+  import {reactive, onMounted, onBeforeUnmount, nextTick} from "vue";
 
   const emit = defineEmits(["update:isListen", "index", "preChapter", "nextChapter", "prePage", "nextPage"]);
 
@@ -65,9 +74,8 @@
   withDefaults(
     defineProps<{
       isListen: boolean;
-      total: number;
     }>(),
-    {isListen: false, total: 0}
+    {isListen: false}
   );
 
   const onHide = () => {

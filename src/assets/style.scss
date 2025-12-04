@@ -72,7 +72,8 @@ body,
 }
 .next-icon {
   display: inline-block;
-  content: url(./images/next.svg);
+  transform: rotate(180deg);
+  content: url(./images/pre.svg);
 }
 .arrow-icon {
   display: inline-block;

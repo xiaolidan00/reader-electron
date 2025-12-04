@@ -35,8 +35,9 @@ export function setHighlight(start: number, textNode: Node, searchLen: number) {
 export function removeHighlight(range: Range) {
   searchHighlight.delete(range);
 }
-
+//当前章节
 export const currentChapter = ref<number>(0);
+//当前页
 export const currentIndex = ref<number>(0);
 //每行多少个字
 export const LineNum = ref(20);
@@ -44,3 +45,25 @@ export const LineNum = ref(20);
 export const PageNum = ref(20);
 //是否语音朗读
 export const isPlay = ref(false);
+
+export const bookState = ref<any>({
+  title: "",
+  isMenu: false,
+  detail: [],
+  showContent: "",
+  total: 0,
+  isListen: false,
+  isSearch: false,
+  isSet: false
+});
+
+export const defaultBookState = {
+  title: "",
+  isMenu: false,
+  detail: [] as string[],
+  showContent: "",
+  total: 0,
+  isListen: false,
+  isSearch: false,
+  isSet: false
+};
