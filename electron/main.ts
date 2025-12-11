@@ -1,4 +1,4 @@
-import {BrowserWindow, app, ipcMain} from "electron";
+import {BrowserWindow, app, ipcMain, shell} from "electron";
 import jschardet from "jschardet";
 import {createRequire} from "node:module";
 import {BOOKLIST} from "./config";
@@ -62,6 +62,11 @@ function createWindow() {
       if (fs.existsSync(delData[i])) {
         fs.unlinkSync(delData[i]);
       }
+    }
+  });
+  ipcMain.on("openPath", (ev: any, op: any) => {
+    if (fs.existsSync(op.data)) {
+      shell.showItemInFolder(op.data);
     }
   });
   ipcMain.on("getFile", (ev: any, op: any) => {

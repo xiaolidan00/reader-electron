@@ -33,12 +33,12 @@
         }
       }
     ];
-    if (isElectron()) {
-      list.push({
-        name: "文件路径",
-        prop: "path"
-      });
-    }
+    // if (isElectron()) {
+    //   list.push({
+    //     name: "文件路径",
+    //     prop: "path"
+    //   });
+    // }
 
     return list;
   });
@@ -96,6 +96,9 @@
 
     state.checkMap = {};
     state.isEdit = false;
+  };
+  const openPath = () => {
+    if (bookItem.value) Controller.openPath(bookItem.value.path);
   };
   const onDelOneTxt = (isFile?: boolean) => {
     Controller.delTxt({[bookItem.value!.id]: true}, isFile);
@@ -226,6 +229,26 @@
                   ? item.formatter(bookItem[item.prop])
                   : bookItem[item.prop]
               }}
+            </td>
+          </tr>
+          <tr v-if="isElectron()">
+            <td>文件路径</td>
+            <td>
+              <div style="display: flex; flex-wrap: wrap">
+                {{ bookItem.path }}
+                <span
+                  style="
+                    flex: 1;
+                    text-align: right;
+                    cursor: pointer;
+                    color: dodgerblue;
+                    margin-left: 10px;
+                    display: inline-block;
+                  "
+                  @click="openPath"
+                  >打开</span
+                >
+              </div>
             </td>
           </tr>
         </table>

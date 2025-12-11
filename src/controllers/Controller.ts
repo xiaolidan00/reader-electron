@@ -72,6 +72,13 @@ export const waitAction = (sendAction: {eventName: string; data?: any}, receive?
 export const fileMap: Record<string, File> = {};
 export default {
   waitAction,
+  async openPath(filePath: string) {
+    console.log("openPath", filePath);
+    await waitAction({
+      eventName: "openPath",
+      data: filePath
+    });
+  },
   //打开txt文件
   openTxt() {
     return new Promise<any>((resolve) => {
