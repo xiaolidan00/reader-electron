@@ -3,7 +3,7 @@ import { bookItem, dataList, LineNum, loading, selectBook, sortType } from '../c
 import { EventBus } from '../utils/EventEmitter';
 import { chapterRegex } from '../data';
 import { isElectron } from '../utils/utils';
-import { convertPinyin } from '../utils/sortUtil';
+import { convertPinyin } from '../utils/pingyinUtil';
 
 export const sortBookList = (list: BookType[]) => {
   if (sortType.value.startsWith('size')) {
@@ -28,7 +28,7 @@ export const sortBookList = (list: BookType[]) => {
         return a.pinyin.length - b.pinyin.length;
       });
     } else {
-      list.sort((b, a) => {
+      list.sort((a, b) => {
         const m = Math.min(a.pinyin.length, b.pinyin.length);
         for (let i = 0; i < m; i++) {
           const a1 = a.pinyin.charCodeAt(i);
@@ -36,10 +36,10 @@ export const sortBookList = (list: BookType[]) => {
           if (a1 === b1) {
             continue;
           } else {
-            return a1 - b1;
+            return b1 - a1;
           }
         }
-        return a.pinyin.length - b.pinyin.length;
+        return b.pinyin.length - a.pinyin.length;
       });
     }
   } else {

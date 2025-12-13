@@ -27,7 +27,7 @@ export const encodeList = [
 export const sortList = [
   { label: '时间升序', value: 'updateTimeAsc' },
   { label: '时间降序', value: 'updateTimeDesc' },
-  { label: '文件名称升序', value: 'namesc' },
+  { label: '文件名称升序', value: 'nameAsc' },
   { label: '文件名称降序', value: 'nameDesc' },
   { label: '文件大小升序', value: 'sizeAsc' },
   { label: '文件大小降序', value: 'sizeDesc' }
