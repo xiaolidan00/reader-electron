@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import {computed} from "vue";
-  import List from "./components/List.vue";
-  import Book from "./components/Book.vue";
-  import {selectBook, loading} from "./config";
+  import { computed } from 'vue';
+  import List from './components/List.vue';
+  import Book from './components/Book.vue';
+  import { selectBook, loading } from './config';
 
   // import VConsole from "vconsole";
 
@@ -18,7 +18,7 @@
 
 <template>
   <component :is="currentPart"></component>
-  <div class="loading" v-show="loading"><i class="loading-icon"></i></div>
+  <div class="loading" v-show="loading"><i class="loading-icon iconfont icon-loading"></i></div>
 </template>
 <style lang="scss" scoped>
   .loading {
@@ -33,8 +33,9 @@
     align-items: center;
     justify-content: center;
     > .loading-icon {
-      height: 48px;
-      width: 48px;
+      font-size: 32px;
+      color: white;
+      animation: rotating 1s linear infinite;
     }
   }
 </style>

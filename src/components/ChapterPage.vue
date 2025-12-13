@@ -2,8 +2,13 @@
   <Drawer :show="isMenu" @hide="onHide" :onShow="onShow">
     <div class="search-box">
       <div class="search">
-        <input placeholder="搜索关键词" type="text" v-model="state.searchKey" @change="onSearch()" />
-        <i v-show="state.searchKey" class="close-icon" @click="state.searchKey = ''"></i>
+        <input
+          placeholder="搜索关键词"
+          type="text"
+          v-model="state.searchKey"
+          @change="onSearch()"
+        />
+        <i v-show="state.searchKey" class="iconfont icon-close" @click="state.searchKey = ''"></i>
       </div>
     </div>
     <div class="nav-container" ref="navRef">
@@ -21,16 +26,16 @@
 </template>
 
 <script setup lang="ts">
-  import Drawer from "./Drawer.vue";
-  import {currentChapter, chapterList} from "../config.ts";
-  import {computed, reactive, useTemplateRef} from "vue";
-  import {debounce} from "lodash-es";
-  const navRef = useTemplateRef("navRef");
+  import Drawer from './Drawer.vue';
+  import { currentChapter, chapterList } from '../config.ts';
+  import { computed, reactive, useTemplateRef } from 'vue';
+  import { debounce } from 'lodash-es';
+  const navRef = useTemplateRef('navRef');
   const props = defineProps({
     isMenu: Boolean
   });
   const state = reactive({
-    searchKey: ""
+    searchKey: ''
   });
   const showChapterList = computed(() => {
     const list = chapterList.value;
@@ -39,13 +44,13 @@
     }
     return list;
   });
-  const emit = defineEmits(["update:isMenu", "item"]);
+  const emit = defineEmits(['update:isMenu', 'item']);
   const onHide = () => {
-    emit("update:isMenu", false);
+    emit('update:isMenu', false);
   };
 
   const onChapterItem = (idx: number) => {
-    emit("item", idx);
+    emit('item', idx);
     // emit("update:isMenu", false);
   };
   const onShow = debounce(() => {

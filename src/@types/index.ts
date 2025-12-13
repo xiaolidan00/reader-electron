@@ -22,6 +22,7 @@ export type BookType = {
   encode?: string;
   /**文件路径*/
   path: string;
+  pinyin: string;
 };
 export type ChapterType = {
   index: number;

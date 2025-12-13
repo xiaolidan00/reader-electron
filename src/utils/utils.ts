@@ -3,5 +3,5 @@ export const isMobile = () => {
 };
 
 export const isElectron = () => {
-  return navigator.userAgent.includes("Electron");
+  return navigator.userAgent.includes('Electron');
 };

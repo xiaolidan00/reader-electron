@@ -1,23 +1,23 @@
-import type {BookType, ChapterType} from "./@types";
+import type { BookType, ChapterType } from './@types';
 
-import {reactive, ref} from "vue";
+import { reactive, ref } from 'vue';
 
-export const selectBook = ref("");
+export const selectBook = ref('');
 export const dataList = ref<Array<BookType>>([]);
 export const bookItem = ref<BookType>();
 export const chapterList = ref<ChapterType[]>([]);
 export const loading = ref<boolean>(false);
-export const listSearchKey = ref<string>("");
+export const listSearchKey = ref<string>('');
 
 let bStyle;
-if (localStorage.getItem("bookStyle")) {
-  bStyle = JSON.parse(localStorage.getItem("bookStyle") as string);
+if (localStorage.getItem('bookStyle')) {
+  bStyle = JSON.parse(localStorage.getItem('bookStyle') as string);
 } else {
   bStyle = {
     fontSize: 18,
     lineHeight: 2,
-    fontColor: "#505050",
-    bg: "#faebd7"
+    fontColor: '#505050',
+    bg: '#faebd7'
   };
 }
 export const bookStyle = reactive(bStyle);
@@ -35,6 +35,8 @@ export function setHighlight(start: number, textNode: Node, searchLen: number) {
 export function removeHighlight(range: Range) {
   searchHighlight.delete(range);
 }
+export const showType = ref(localStorage.getItem('showType') || 'card');
+export const sortType = ref(localStorage.getItem('sortType') || 'updateTimeDesc');
 //当前章节
 export const currentChapter = ref<number>(0);
 //当前页
@@ -47,23 +49,25 @@ export const PageNum = ref(20);
 export const isPlay = ref(false);
 
 export const bookState = ref<any>({
-  title: "",
+  title: '',
   isMenu: false,
   detail: [],
-  showContent: "",
+  showContent: '',
   total: 0,
   isListen: false,
   isSearch: false,
-  isSet: false
+  isSet: false,
+  isClick: true
 });
 
 export const defaultBookState = {
-  title: "",
+  title: '',
   isMenu: false,
   detail: [] as string[],
-  showContent: "",
+  showContent: '',
   total: 0,
   isListen: false,
   isSearch: false,
-  isSet: false
+  isSet: false,
+  isClick: true
 };

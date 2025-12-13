@@ -2,48 +2,58 @@
   <Drawer :show="isSearch" @hide="onHide">
     <div class="search-box">
       <div class="search">
-        <input placeholder="搜索关键词" type="text" v-model="state.searchKey" @change="onSearch()" />
-        <i class="search-icon" @click="onSearch()"></i>
+        <input
+          placeholder="搜索关键词"
+          type="text"
+          v-model="state.searchKey"
+          @change="onSearch()"
+        />
+        <i class="iconfont icon-search" @click="onSearch()"></i>
       </div>
     </div>
 
     <div class="empty" v-show="state.searchKey && state.searchResult.length == 0">暂无搜索结果</div>
     <div class="search-list" ref="searchList">
-      <div @click="onSearhItem(item)" v-for="(item, i) in state.searchResult" :key="i" v-html="item.content"></div>
+      <div
+        @click="onSearhItem(item)"
+        v-for="(item, i) in state.searchResult"
+        :key="i"
+        v-html="item.content"
+      ></div>
     </div>
   </Drawer>
 </template>
 
 <script setup lang="ts">
-  import {reactive, nextTick, ref} from "vue";
+  import { reactive, nextTick, ref } from 'vue';
 
-  import {chapterList, setHighlight, PageNum, LineNum} from "../config.ts";
-  import Drawer from "./Drawer.vue";
-  import type {SearchItemType} from "../@types";
+  import { chapterList, setHighlight, PageNum, LineNum } from '../config.ts';
+  import Drawer from './Drawer.vue';
+  import type { SearchItemType } from '../@types';
   const searchList = ref<HTMLDivElement>();
   defineProps({
     isSearch: Boolean
   });
-  const emit = defineEmits(["update:isSearch", "item"]);
+  const emit = defineEmits(['update:isSearch', 'item']);
 
   type StateType = {
     searchResult: SearchItemType[];
     searchKey: string;
   };
   const state = reactive<StateType>({
-    searchKey: "",
+    searchKey: '',
     searchResult: []
   });
 
   const onHide = () => {
-    emit("update:isSearch", false);
+    emit('update:isSearch', false);
   };
   let searchLen = 0;
 
   const onSearch = async () => {
     const list: SearchItemType[] = [];
     if (state.searchKey) {
-      const s = state.searchKey + "";
+      const s = state.searchKey + '';
       chapterList.value.forEach((it, c) => {
         const t = Math.ceil(it.title.length / LineNum.value);
 
@@ -51,7 +61,12 @@
           const start = item.indexOf(s);
 
           if (start >= 0) {
-            list.push({content: item, chapter: c, start, index: Math.floor((idx + t) / PageNum.value)});
+            list.push({
+              content: item,
+              chapter: c,
+              start,
+              index: Math.floor((idx + t) / PageNum.value)
+            });
           }
         });
       });
@@ -69,8 +84,8 @@
     }
   };
   const onSearhItem = (item: SearchItemType) => {
-    emit("item", {item, searchLen, searchKey: state.searchKey});
-    emit("update:isSearch", false);
+    emit('item', { item, searchLen, searchKey: state.searchKey });
+    emit('update:isSearch', false);
   };
 </script>
 

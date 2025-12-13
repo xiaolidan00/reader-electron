@@ -4,27 +4,25 @@
       <div class="title" v-if="chapterList.length && chapterList[currentChapter]">
         {{ chapterList[currentChapter].title }}
       </div>
-      <div style="padding: 10px; text-align: center">{{ currentIndex + 1 }}/{{ bookState.total }}</div>
+      <div style="padding: 10px; text-align: center">
+        {{ currentIndex + 1 }}/{{ bookState.total }}
+      </div>
       <div class="progress">
-        <input type="range" v-model="currentIndex" @click="changeIndex()" :min="0" :max="bookState.total - 1" />
+        <input
+          type="range"
+          v-model="currentIndex"
+          @click="changeIndex()"
+          :min="0"
+          :max="bookState.total - 1"
+        />
       </div>
 
       <div class="control">
-        <span @click="onBtnAction('preChapter')">
-          <i class="pre-icon"></i>
-        </span>
-        <span @click="onBtnAction('prePage')">
-          <i class="arrow-icon reverse"></i>
-        </span>
-        <span @click="onPlay()" class="big">
-          <i :class="[isPlay ? 'stop-icon' : 'play-icon']"></i>
-        </span>
-        <span @click="onBtnAction('nextPage')">
-          <i class="arrow-icon"></i>
-        </span>
-        <span @click="onBtnAction('nextChapter')">
-          <i class="next-icon"></i>
-        </span>
+        <i @click="onBtnAction('preChapter')" class="iconfont icon-next"> </i>
+        <i @click="onBtnAction('prePage')" class="iconfont icon-arrow"> </i>
+        <i @click="onPlay()" :class="['iconfont', isPlay ? 'icon-pause' : 'icon-play']"> </i>
+        <i @click="onBtnAction('nextPage')" class="iconfont icon-arrow"> </i>
+        <i @click="onBtnAction('nextChapter')" class="iconfont icon-next"> </i>
       </div>
       <div class="speed">
         <span
@@ -40,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-  import Drawer from "./Drawer.vue";
+  import Drawer from './Drawer.vue';
   import {
     currentChapter,
     chapterList,
@@ -49,42 +47,49 @@
     removeHighlight,
     setHighlight,
     bookState
-  } from "../config.ts";
-  import {reactive, onMounted, onBeforeUnmount, nextTick} from "vue";
+  } from '../config.ts';
+  import { reactive, onMounted, onBeforeUnmount, nextTick } from 'vue';
 
-  const emit = defineEmits(["update:isListen", "index", "preChapter", "nextChapter", "prePage", "nextPage"]);
+  const emit = defineEmits([
+    'update:isListen',
+    'index',
+    'preChapter',
+    'nextChapter',
+    'prePage',
+    'nextPage'
+  ]);
 
   const speeds = [
-    {name: "0.5X", value: 0.5},
-    {name: "1.0X", value: 1},
-    {name: "1.2X", value: 1.2},
-    {name: "1.5X", value: 1.5},
-    {name: "1.8X", value: 1.8},
-    {name: "2.0X", value: 2}
+    { name: '0.5X', value: 0.5 },
+    { name: '1.0X', value: 1 },
+    { name: '1.2X', value: 1.2 },
+    { name: '1.5X', value: 1.5 },
+    { name: '1.8X', value: 1.8 },
+    { name: '2.0X', value: 2 }
   ];
   type StateType = {
     voice: number;
     speed: number;
   };
   const state = reactive<StateType>({
-    voice: Number(localStorage.getItem("voice")) || 0,
+    voice: Number(localStorage.getItem('voice')) || 0,
 
-    speed: Number(localStorage.getItem("speed")) || 1.5
+    speed: Number(localStorage.getItem('speed')) || 1.5
   });
   withDefaults(
     defineProps<{
       isListen: boolean;
     }>(),
-    {isListen: false}
+    { isListen: false }
   );
 
   const onHide = () => {
-    emit("update:isListen", false);
+    emit('update:isListen', false);
   };
   const changeIndex = () => {
-    emit("index", currentIndex.value);
+    emit('index', currentIndex.value);
   };
-  const onBtnAction = (type: "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
+  const onBtnAction = (type: 'preChapter' | 'nextChapter' | 'prePage' | 'nextPage') => {
     emit(type);
   };
 
@@ -95,26 +100,26 @@
 
   const onSpeed = (i: number) => {
     state.speed = i;
-    localStorage.setItem("speed", i + "");
+    localStorage.setItem('speed', i + '');
     if (isPlay.value) onSpeak();
   };
   const onPlay = () => {
     isPlay.value = !isPlay.value;
     onSpeak();
   };
-  const voiceSet: {txt: string; utterance?: SpeechSynthesisUtterance} = {
-    txt: ""
+  const voiceSet: { txt: string; utterance?: SpeechSynthesisUtterance } = {
+    txt: ''
   };
   let beforeRange: Range;
   const onSpeak = async () => {
     await nextTick();
 
     if (isPlay.value) {
-      const contenTxt = document.getElementById("bookContainer")!;
+      const contenTxt = document.getElementById('bookContainer')!;
       const str = contenTxt.innerText;
       if (voiceSet.txt != str) {
         speechSynthesis.cancel();
-        const t = new SpeechSynthesisUtterance(str.replace(/[\_\-\+=\*]+/g, ""));
+        const t = new SpeechSynthesisUtterance(str.replace(/[\_\-\+=\*]+/g, ''));
 
         t.rate = state.speed;
         t.volume = 100;
@@ -122,7 +127,7 @@
         voiceSet.txt = str;
         voiceSet.utterance = t;
         t.onboundary = (e: SpeechSynthesisEvent) => {
-          const dom = document.getElementById("contenTxt")!;
+          const dom = document.getElementById('contenTxt')!;
           if (beforeRange) {
             removeHighlight(beforeRange);
           }
@@ -130,13 +135,13 @@
           if (textNode) beforeRange = setHighlight(e.charIndex, textNode, e.charLength);
         };
         t.onend = () => {
-          emit("nextPage");
+          emit('nextPage');
         };
         t.onerror = (err) => {
           // console.log("🚀 ~ ListenPage.vue ~ onSpeak ~ err:", err);
           isPlay.value = false;
           speechSynthesis.cancel();
-          voiceSet.txt = "";
+          voiceSet.txt = '';
         };
       } else if (voiceSet.utterance) {
         speechSynthesis.resume();
@@ -156,7 +161,7 @@
     //   document.addEventListener("visibilitychange", onVisibilitychange);
     // }
 
-    navigator.mediaDevices.addEventListener("devicechange", stopPlay);
+    navigator.mediaDevices.addEventListener('devicechange', stopPlay);
   });
   onBeforeUnmount(() => {
     // if (isMobile()) {
@@ -165,7 +170,7 @@
 
     isPlay.value = false;
     speechSynthesis.cancel();
-    navigator.mediaDevices.removeEventListener("devicechange", stopPlay);
+    navigator.mediaDevices.removeEventListener('devicechange', stopPlay);
   });
   defineExpose({
     onSpeak,
@@ -233,25 +238,30 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      > span {
+      > i {
         height: 50px;
         width: 50px;
         flex: none;
         cursor: pointer;
-
+        font-size: 20px;
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background-color: gray;
-        &.big {
+        color: white;
+        &:nth-child(1),
+        &:nth-child(2) {
+          transform: rotate(180deg);
+        }
+        &:nth-child(3) {
           height: 80px;
           width: 80px;
+          font-size: 40px;
         }
-      }
-      i {
-        height: 30px;
-        width: 30px;
+        &:hover {
+          background-color: dodgerblue;
+        }
       }
     }
   }

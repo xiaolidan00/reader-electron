@@ -1,38 +1,40 @@
 <script setup lang="ts">
-  import {reactive, computed, onMounted, onBeforeUnmount} from "vue";
-  import {selectBook, dataList, bookItem, listSearchKey} from "../config.ts";
-  import {BookType} from "../@types";
-  import Controller, {fileMap, getData} from "../controllers/Controller.ts";
-  import {isElectron} from "../utils/utils.ts";
+  import { reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+  import { selectBook, dataList, bookItem, listSearchKey, sortType, showType } from '../config.ts';
+  import { BookType } from '../@types';
+  import { sortList, showList } from '../data/index';
+  import Controller, { fileMap, getData, sortBookList } from '../controllers/Controller.ts';
+  import { isElectron } from '../utils/utils.ts';
 
   const formatNum = (v: number) => {
     return new Intl.NumberFormat().format(v);
   };
   const detailSet = computed(() => {
-    const list: Array<{name: string; prop: keyof BookType; idx?: boolean; formatter?: Function}> = [
-      {name: "共有章节", prop: "total", formatter: formatNum},
-      {name: "当前章节", prop: "chapter", idx: true},
-      {
-        name: "共有字数",
-        prop: "num",
-        formatter: formatNum
-      },
-      {
-        name: "文件大小",
-        prop: "size",
-        formatter: formatNum
-      },
-      {
-        name: "最近阅读",
-        prop: "updateTime",
-        formatter: (v: number) => {
-          const d = new Date(v);
-          return `${d.getFullYear()}-${
-            d.getMonth() + 1
-          }-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+    const list: Array<{ name: string; prop: keyof BookType; idx?: boolean; formatter?: Function }> =
+      [
+        { name: '共有章节', prop: 'total', formatter: formatNum },
+        { name: '当前章节', prop: 'chapter', idx: true },
+        {
+          name: '共有字数',
+          prop: 'num',
+          formatter: formatNum
+        },
+        {
+          name: '文件大小',
+          prop: 'size',
+          formatter: formatNum
+        },
+        {
+          name: '最近阅读',
+          prop: 'updateTime',
+          formatter: (v: number) => {
+            const d = new Date(v);
+            return `${d.getFullYear()}-${
+              d.getMonth() + 1
+            }-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+          }
         }
-      }
-    ];
+      ];
     // if (isElectron()) {
     //   list.push({
     //     name: "文件路径",
@@ -45,7 +47,7 @@
 
   type StateType = {
     isEdit: boolean;
-    checkMap: {[n: string]: boolean};
+    checkMap: { [n: string]: boolean };
     isAll: boolean;
     disable: boolean;
     isDetail: boolean;
@@ -78,10 +80,14 @@
     if (state.isEdit) {
       onCheckItem(item);
     } else {
-      if (!isElectron() && !fileMap[item.id]) return alert("请选择文件");
+      if (!isElectron() && !fileMap[item.id]) return alert('请选择文件');
       selectBook.value = item.id;
       bookItem.value = item;
     }
+  };
+  const updateSort = () => {
+    localStorage.setItem('sortType', sortType.value);
+    sortBookList(dataList.value);
   };
   const onDelTxt = (isFile?: boolean) => {
     const ids: string[] = [];
@@ -101,7 +107,7 @@
     if (bookItem.value) Controller.openPath(bookItem.value.path);
   };
   const onDelOneTxt = (isFile?: boolean) => {
-    Controller.delTxt({[bookItem.value!.id]: true}, isFile);
+    Controller.delTxt({ [bookItem.value!.id]: true }, isFile);
     state.checkMap = {};
     state.isDetail = false;
     state.isEdit = false;
@@ -140,7 +146,7 @@
   };
   //显示书名
   const getTitle = (t: string) => {
-    return t.replace(/[,，！!、]/g, "").substring(0, 20);
+    return t.replace(/[,，！!、]/g, '').substring(0, 20);
   };
   const onDragOver = (ev: DragEvent) => {
     ev.preventDefault();
@@ -152,9 +158,9 @@
       const items = ev.dataTransfer.items;
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        if (item.type === "file") {
+        if (item.type === 'file') {
           const f = item.getAsFile()!;
-          if (f.name.endsWith(".txt")) {
+          if (f.name.endsWith('.txt')) {
             fileList.push(f);
           }
         }
@@ -162,7 +168,7 @@
     }
 
     if (fileList.length === 0 && ev.dataTransfer?.files?.length) {
-      fileList = Array.from(ev.dataTransfer.files).filter((it) => it.name.endsWith(".txt"));
+      fileList = Array.from(ev.dataTransfer.files).filter((it) => it.name.endsWith('.txt'));
     }
     if (fileList.length) {
       Controller.openTxtInfo(fileList);
@@ -170,12 +176,12 @@
   };
   onMounted(() => {
     getData();
-    document.addEventListener("dragover", onDragOver);
-    document.addEventListener("drop", onDropFile);
+    document.addEventListener('dragover', onDragOver);
+    document.addEventListener('drop', onDropFile);
   });
   onBeforeUnmount(() => {
-    document.removeEventListener("dragover", onDragOver);
-    document.removeEventListener("drop", onDropFile);
+    document.removeEventListener('dragover', onDragOver);
+    document.removeEventListener('drop', onDropFile);
   });
 </script>
 
@@ -183,18 +189,42 @@
   <div class="search-box">
     <div class="search">
       <input placeholder="搜索关键词" type="text" v-model="listSearchKey" />
-      <i class="close-icon" @click="listSearchKey = ''" v-show="listSearchKey"></i>
+      <i class="iconfont icon-close" @click="listSearchKey = ''" v-show="listSearchKey"></i>
     </div>
-    <!-- <i class="more-icon"></i> -->
   </div>
   <div class="tool-bar">
-    <button @click="openTxt()" :disabled="state.disable">导入TXT</button>
+    <i :class="['iconfont icon-setting', state.isEdit ? 'active' : '']" @click="onBatch"></i>
+    <button v-if="!state.isEdit" @click="openTxt()" :disabled="state.disable">导入</button>
+
     <i v-if="state.isEdit" :class="['check', state.isAll ? 'active' : '']" @click="onAll()"></i>
-    <button :class="[state.isEdit ? 'active' : '']" @click="onBatch">批量操作</button>
+
     <button v-if="state.isEdit" @click="onDelTxt()">删除记录</button>
     <button v-if="state.isEdit && isElectron()" @click="onDelTxt(true)">删除文件</button>
+    <select v-if="!state.isEdit" v-model="sortType" @change="updateSort">
+      <option v-for="item in sortList" :key="item.value" :value="item.value">
+        {{ item.label }}
+      </option>
+    </select>
+
+    <select v-if="!state.isEdit" v-model="showType">
+      <option v-for="item in showList" :key="item.value" :value="item.value">
+        {{ item.label }}
+      </option>
+    </select>
   </div>
-  <div class="book-list">
+  <div class="book-list1" v-if="showType === 'list'">
+    <div v-for="item in showDataList" class="book-item1" :key="item.name">
+      <i
+        v-if="state.isEdit"
+        :class="['check', state.checkMap[item.id] ? 'active' : '']"
+        @click.self="onCheckItem(item)"
+      ></i>
+      <span class="title" @click.self="onReadTxt(item)">{{ item.name }}</span>
+      <span class="progress">{{ item.chapter + 1 }}/{{ item.total }} </span>
+      <i class="iconfont icon-More" @click="onRightItem(item)"></i>
+    </div>
+  </div>
+  <div class="book-list" v-else>
     <div class="book-item" v-for="item in showDataList" :key="item.name">
       <div class="book-top">
         <i
@@ -209,7 +239,7 @@
       </div>
       <div class="book-detail" @click="onRightItem(item)">
         <span>{{ item.chapter + 1 }}/{{ item.total }} </span>
-        <i class="more-icon"></i>
+        <i class="iconfont icon-More"></i>
       </div>
     </div>
   </div>

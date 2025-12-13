@@ -20,28 +20,9 @@ body,
 
 * {
   box-sizing: border-box !important;
-  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
 }
-.more-icon {
-  display: inline-block;
-  content: url(./images/more.svg);
-}
-.search-icon {
-  display: inline-block;
-  content: url(./images/search.svg);
-}
-.back-icon {
-  display: inline-block;
-  content: url(./images/back.svg);
-}
-.book-icon {
-  display: inline-block;
-  content: url(./images/book.svg);
-}
-.setting-icon {
-  display: inline-block;
-  content: url(./images/setting.svg);
-}
+
 @keyframes rotating {
   0% {
     transform: rotate(0deg);
@@ -53,49 +34,7 @@ body,
     transform: rotate(360deg);
   }
 }
-.loading-icon {
-  display: inline-block;
-  content: url(./images/loading.svg);
-  animation: rotating 1s linear infinite;
-}
-.listen-icon {
-  display: inline-block;
-  content: url(./images/listen.svg);
-}
-.play-icon {
-  display: inline-block;
-  content: url(./images/play.svg);
-}
-.pre-icon {
-  display: inline-block;
-  content: url(./images/pre.svg);
-}
-.next-icon {
-  display: inline-block;
-  transform: rotate(180deg);
-  content: url(./images/pre.svg);
-}
-.arrow-icon {
-  display: inline-block;
-  content: url(./images/arrow.svg);
-}
-.arrow-icon.reverse {
-  display: inline-block;
-  transform: rotate(180deg);
-  content: url(./images/arrow.svg);
-}
-.stop-icon {
-  display: inline-block;
-  content: url(./images/stop.svg);
-}
-.save-icon {
-  display: inline-block;
-  content: url(./images/save.svg);
-}
-.close-icon {
-  display: inline-block;
-  content: url(./images/close.svg);
-}
+
 ::-webkit-scrollbar {
   background-color: transparent;
   height: 10px;
@@ -123,7 +62,7 @@ body,
     padding: 0 10px;
   }
 
-  input[type="text"] {
+  input[type='text'] {
     flex: 1;
 
     border: none;
@@ -132,8 +71,11 @@ body,
     outline: none;
   }
   i {
-    width: 20px;
-    height: 20px;
+    font-size: 20px;
+    color: gray;
+    &:hover {
+      color: dodgerblue;
+    }
   }
 }
 ::highlight(search-highlight) {
@@ -159,7 +101,7 @@ body,
     background-color: var(--bg);
   }
 }
-input[type="range"] {
+input[type='range'] {
   width: 100%;
 
   background-color: #ccc;
@@ -249,18 +191,34 @@ table.detail-table {
 .tool-bar {
   height: 40px;
   padding: 0 10px;
-  cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
+  gap: 10px;
+  select {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    font-size: 14px;
+  }
+  i {
+    font-size: 20px;
+    display: inline-block;
+    cursor: pointer;
+    &.active {
+      color: dodgerblue;
+    }
+  }
   > button {
     height: 40px;
     border: none;
-    font-size: 16px;
-    padding: 0 10px;
+    font-size: 14px;
+
+    cursor: pointer;
     background-color: transparent;
 
-    &.active {
+    &.active,
+    &:hover {
       color: dodgerblue;
     }
   }
@@ -275,6 +233,42 @@ table.detail-table {
   height: calc(100% - 100px);
   user-select: none;
   overflow: hidden auto;
+}
+.book-list1 {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 100px);
+  user-select: none;
+  overflow: hidden auto;
+}
+.book-item1 {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  > .title {
+    display: inline-block;
+    width: calc(100% - 60px);
+    font-size: 16px;
+    overflow: hidden;
+    word-break: break-all;
+    flex: 1;
+  }
+  .progress {
+    font-size: 14px;
+  }
+  .more-icon {
+    height: 20px;
+    width: 20px;
+    cursor: pointer;
+  }
+  &:not(:last-child) {
+    border-bottom: solid 1px #ccc;
+  }
+  &:hover {
+    color: dodgerblue;
+  }
 }
 .book-item {
   display: inline-block;
@@ -319,10 +313,12 @@ table.detail-table {
       flex: 1;
     }
     i {
-      height: 16px;
-      width: 16px;
-      opacity: 0.5;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.5);
       cursor: pointer;
+      &:hover {
+        color: white;
+      }
     }
   }
 }

@@ -1,21 +1,69 @@
-import {BookType, ChapterType} from "../@types";
-import {bookItem, dataList, LineNum, loading, selectBook} from "../config";
-import {EventBus} from "../utils/EventEmitter";
-import {chapterRegex} from "../data";
-import {isElectron} from "../utils/utils";
+import { BookType, ChapterType } from '../@types';
+import { bookItem, dataList, LineNum, loading, selectBook, sortType } from '../config';
+import { EventBus } from '../utils/EventEmitter';
+import { chapterRegex } from '../data';
+import { isElectron } from '../utils/utils';
+import { convertPinyin } from '../utils/sortUtil';
 
+export const sortBookList = (list: BookType[]) => {
+  if (sortType.value.startsWith('size')) {
+    if (sortType.value.endsWith('Asc')) {
+      list.sort((a, b) => a.size - b.size);
+    } else {
+      list.sort((a, b) => b.size - a.size);
+    }
+  } else if (sortType.value.startsWith('name')) {
+    if (sortType.value.endsWith('Asc')) {
+      list.sort((a, b) => {
+        const m = Math.min(a.pinyin.length, b.pinyin.length);
+        for (let i = 0; i < m; i++) {
+          const a1 = a.pinyin.charCodeAt(i);
+          const b1 = b.pinyin.charCodeAt(i);
+          if (a1 === b1) {
+            continue;
+          } else {
+            return a1 - b1;
+          }
+        }
+        return a.pinyin.length - b.pinyin.length;
+      });
+    } else {
+      list.sort((b, a) => {
+        const m = Math.min(a.pinyin.length, b.pinyin.length);
+        for (let i = 0; i < m; i++) {
+          const a1 = a.pinyin.charCodeAt(i);
+          const b1 = b.pinyin.charCodeAt(i);
+          if (a1 === b1) {
+            continue;
+          } else {
+            return a1 - b1;
+          }
+        }
+        return a.pinyin.length - b.pinyin.length;
+      });
+    }
+  } else {
+    if (sortType.value.endsWith('Asc')) {
+      list.sort((a, b) => a.updateTime - b.updateTime);
+    } else {
+      list.sort((a, b) => b.updateTime - a.updateTime);
+    }
+  }
+  return list;
+};
 const save = async (data: BookType[]) => {
-  data.sort((a, b) => b.updateTime - a.updateTime);
+  sortBookList(data);
+
   if (isElectron()) {
     await waitAction(
       {
-        eventName: "saveBookList",
+        eventName: 'saveBookList',
         data: JSON.parse(JSON.stringify(data))
       },
       true
     );
   } else {
-    localStorage.setItem("BOOK_LIST", JSON.stringify(data));
+    localStorage.setItem('BOOK_LIST', JSON.stringify(data));
   }
 };
 export const getData = async () => {
@@ -23,13 +71,13 @@ export const getData = async () => {
   if (isElectron()) {
     d = await waitAction(
       {
-        eventName: "getBookList"
+        eventName: 'getBookList'
       },
       true
     );
-    console.log("getData", d);
+    console.log('getData', d);
   } else {
-    d = localStorage.getItem("BOOK_LIST");
+    d = localStorage.getItem('BOOK_LIST');
     if (d) {
       try {
         d = JSON.parse(d);
@@ -42,18 +90,18 @@ export const getData = async () => {
   }
 
   if (d) {
-    dataList.value = (d as BookType[]).sort((a, b) => b.updateTime - a.updateTime);
+    dataList.value = sortBookList(d as BookType[]);
     return dataList.value;
   }
   return [];
 };
-export const waitAction = (sendAction: {eventName: string; data?: any}, receive?: boolean) => {
+export const waitAction = (sendAction: { eventName: string; data?: any }, receive?: boolean) => {
   return new Promise<any>((resolve, reject) => {
-    const cbId = "action" + new Date().getTime();
+    const cbId = 'action' + new Date().getTime();
 
     if (receive) {
       const t = setTimeout(() => {
-        reject("timeout");
+        reject('timeout');
       }, 10000);
       window.ipcRenderer.once(cbId, (_event: any, data: any) => {
         // console.log("🚀 ~ Controller.ts ~ waitAction", sendAction.eventName, sendAction.data, data);
@@ -66,42 +114,42 @@ export const waitAction = (sendAction: {eventName: string; data?: any}, receive?
       cb: cbId,
       data: sendAction.data
     });
-    if (!receive) resolve("");
+    if (!receive) resolve('');
   });
 };
 export const fileMap: Record<string, File> = {};
 export default {
   waitAction,
   async openPath(filePath: string) {
-    console.log("openPath", filePath);
+    console.log('openPath', filePath);
     await waitAction({
-      eventName: "openPath",
+      eventName: 'openPath',
       data: filePath
     });
   },
   //打开txt文件
   openTxt() {
     return new Promise<any>((resolve) => {
-      let upload = document.getElementById("uploadFile") as HTMLInputElement;
+      let upload = document.getElementById('uploadFile') as HTMLInputElement;
       if (!upload) {
-        upload = document.createElement("input") as HTMLInputElement;
-        upload.id = "uploadFile";
-        upload.type = "file";
-        upload.accept = ".txt";
-        upload.style.position = "fixed";
-        upload.style.opacity = "0";
+        upload = document.createElement('input') as HTMLInputElement;
+        upload.id = 'uploadFile';
+        upload.type = 'file';
+        upload.accept = '.txt';
+        upload.style.position = 'fixed';
+        upload.style.opacity = '0';
         upload.multiple = true;
-        upload.style.display = "none";
+        upload.style.display = 'none';
       }
 
       upload.onchange = () => {
         if (upload.files) this.openTxtInfo(upload.files);
 
-        resolve("");
+        resolve('');
       };
 
       setTimeout(() => {
-        resolve("");
+        resolve('');
       }, 5000);
       document.body.appendChild(upload);
       upload.click();
@@ -116,17 +164,17 @@ export default {
           fileMap[f.name] = f;
           id = f.name;
         } else {
-          id = f.path.replace(/[\.|\:\\]/g, "_");
+          id = f.path.replace(/[\.|\:\\]/g, '_');
         }
 
         let data: BookType;
-
+        const pping = f.name.substring(0, f.name.lastIndexOf('.'));
         const idx = dataList.value.findIndex((a) => a.id === id);
         if (idx >= 0) {
           data = dataList.value[idx];
           dataList.value[idx] = {
             ...data,
-            name: f.name,
+            name: pping,
             path: f.path,
             size: f.size,
             updateTime: new Date().getTime()
@@ -134,7 +182,7 @@ export default {
         } else {
           data = {
             id: id,
-            name: f.name,
+            name: pping,
             chapter: 0,
             index: 0,
             total: 0,
@@ -142,8 +190,9 @@ export default {
             updateTime: new Date().getTime(),
             size: f.size,
             regexType: -1,
-            regex: "",
-            path: f.path
+            regex: '',
+            path: f.path,
+            pinyin: convertPinyin(pping).toLowerCase()
           };
           dataList.value.unshift(data);
         }
@@ -170,7 +219,7 @@ export default {
     save(dataList.value);
     if (isFile) {
       await waitAction({
-        eventName: "delFile",
+        eventName: 'delFile',
         data: files
       });
     }
@@ -180,7 +229,7 @@ export default {
   getRegex(s: string): RegExp {
     for (let i = 0; i < chapterRegex.length; i++) {
       const r = chapterRegex[i].value;
-      const rr = new RegExp(r, "g");
+      const rr = new RegExp(r, 'g');
       if (rr.test(s)) {
         return rr;
       }
@@ -195,10 +244,10 @@ export default {
     if (!it) return [];
     const content = [];
     if (it.length + 3 <= LineNum.value && it) {
-      content.push("\t" + it + "\n");
+      content.push('\t' + it + '\n');
     } else {
       let count = 3;
-      let ss = "\t";
+      let ss = '\t';
       for (let i = 0; i < it.length; i++) {
         const s = it[i];
         count++;
@@ -206,16 +255,16 @@ export default {
         if (count == LineNum.value || i == it.length - 1) {
           content.push(ss);
           count = 0;
-          ss = "";
+          ss = '';
         }
       }
-      content[content.length - 1] += "\n";
+      content[content.length - 1] += '\n';
     }
     return content;
   },
 
   /** 修改正则表达式 */
-  changeRegex({regex, regexType}: {regexType: number; regex: string}) {
+  changeRegex({ regex, regexType }: { regexType: number; regex: string }) {
     const idx = dataList.value.findIndex((a) => a.id === selectBook.value);
     if (idx < 0) return;
     const data = dataList.value[idx];
@@ -244,7 +293,7 @@ export default {
     const idx = dataList.value.findIndex((a) => a.id === selectBook.value);
     if (idx < 0) return;
     const data = dataList.value[idx];
-    console.log("readTxt", data);
+    console.log('readTxt', data);
     if (!isElectron()) {
       loading.value = true;
 
@@ -253,15 +302,15 @@ export default {
         this.readTxtContent(reader.result!.toString(), isFlag);
       };
       reader.onerror = (err) => {
-        console.log("🚀 ~ Controller.ts ~ err:", err);
+        console.log('🚀 ~ Controller.ts ~ err:', err);
         loading.value = false;
       };
-      reader.readAsText(fileMap[selectBook.value]!, data.encode || "UTF-8");
+      reader.readAsText(fileMap[selectBook.value]!, data.encode || 'UTF-8');
     } else {
       try {
         const buf = await this.waitAction(
           {
-            eventName: "getFile",
+            eventName: 'getFile',
             data: {
               path: data!.path,
               encode: data!.encode
@@ -276,7 +325,7 @@ export default {
   },
   readTxtContent(result: string, isFlag?: boolean) {
     if (!result) {
-      alert("读取txt失败");
+      alert('读取txt失败');
       // EventBus.emit("backTxt");
       loading.value = false;
       return;
@@ -286,22 +335,22 @@ export default {
     const txt = result;
 
     const first3000 = txt.substring(0, 3000);
-    console.log("🚀 ~ Controller.ts ~ first100:", txt.substring(0, 100));
-    if (first3000.indexOf("�") >= 0) {
-      alert("解析txt失败,请修改编码方式");
+    console.log('🚀 ~ Controller.ts ~ first100:', txt.substring(0, 100));
+    if (first3000.indexOf('�') >= 0) {
+      alert('解析txt失败,请修改编码方式');
       loading.value = false;
       return;
     }
 
-    const lines = txt.replace(/\r|\t/g, "").split("\n");
+    const lines = txt.replace(/\r|\t/g, '').split('\n');
 
-    let newTitle = "";
+    let newTitle = '';
     let title = data.name;
     let content: string[] = [];
     const list: ChapterType[] = [];
     let cIdx = 0;
 
-    const zhangjie = data.regex ? new RegExp(data.regex, "g") : this.getRegex(first3000);
+    const zhangjie = data.regex ? new RegExp(data.regex, 'g') : this.getRegex(first3000);
 
     lines.forEach((it: string, i: number) => {
       let tag = true;
@@ -352,7 +401,7 @@ export default {
       dataList.value[idx] = data;
       save(dataList.value);
     }
-    EventBus.emit("readTxt", list);
+    EventBus.emit('readTxt', list);
     loading.value = false;
   },
 
