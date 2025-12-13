@@ -43,6 +43,15 @@ body,
 ::-webkit-scrollbar-thumb {
   background-color: #ccc;
 }
+.open-text {
+  flex: 1;
+  text-align: right;
+  cursor: pointer;
+  color: dodgerblue;
+  margin-left: 10px;
+  display: inline-block;
+  white-space: nowrap;
+}
 .chapter-title {
   font-weight: bold;
   text-align: center;

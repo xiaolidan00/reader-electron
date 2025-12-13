@@ -193,7 +193,11 @@
     </div>
   </div>
   <div class="tool-bar">
-    <i :class="['iconfont icon-setting', state.isEdit ? 'active' : '']" @click="onBatch"></i>
+    <i
+      title="是否开启批量操作"
+      :class="['iconfont icon-setting', state.isEdit ? 'active' : '']"
+      @click="onBatch"
+    ></i>
     <button v-if="!state.isEdit" @click="openTxt()" :disabled="state.disable">导入</button>
 
     <i v-if="state.isEdit" :class="['check', state.isAll ? 'active' : '']" @click="onAll()"></i>
@@ -266,18 +270,7 @@
             <td>
               <div style="display: flex; flex-wrap: wrap">
                 {{ bookItem.path }}
-                <span
-                  style="
-                    flex: 1;
-                    text-align: right;
-                    cursor: pointer;
-                    color: dodgerblue;
-                    margin-left: 10px;
-                    display: inline-block;
-                  "
-                  @click="openPath"
-                  >打开</span
-                >
+                <span class="open-text" @click="openPath">打开</span>
               </div>
             </td>
           </tr>
