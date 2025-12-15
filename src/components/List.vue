@@ -1,40 +1,39 @@
 <script setup lang="ts">
-  import { reactive, computed, onMounted, onBeforeUnmount } from 'vue';
-  import { selectBook, dataList, bookItem, listSearchKey, sortType, showType } from '../config.ts';
-  import { BookType } from '../@types';
-  import { sortList, showList } from '../data/index';
-  import Controller, { fileMap, getData, sortBookList } from '../controllers/Controller.ts';
-  import { isElectron } from '../utils/utils.ts';
+  import {reactive, computed, onMounted, onBeforeUnmount} from "vue";
+  import {selectBook, dataList, bookItem, listSearchKey, sortType, showType} from "../config.ts";
+  import {BookType} from "../@types";
+  import {sortList, showList} from "../data/index";
+  import Controller, {fileMap, getData, sortBookList} from "../controllers/Controller.ts";
+  import {isElectron} from "../utils/utils.ts";
 
   const formatNum = (v: number) => {
     return new Intl.NumberFormat().format(v);
   };
   const detailSet = computed(() => {
-    const list: Array<{ name: string; prop: keyof BookType; idx?: boolean; formatter?: Function }> =
-      [
-        { name: '共有章节', prop: 'total', formatter: formatNum },
-        { name: '当前章节', prop: 'chapter', idx: true },
-        {
-          name: '共有字数',
-          prop: 'num',
-          formatter: formatNum
-        },
-        {
-          name: '文件大小',
-          prop: 'size',
-          formatter: formatNum
-        },
-        {
-          name: '最近阅读',
-          prop: 'updateTime',
-          formatter: (v: number) => {
-            const d = new Date(v);
-            return `${d.getFullYear()}-${
-              d.getMonth() + 1
-            }-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
-          }
+    const list: Array<{name: string; prop: keyof BookType; idx?: boolean; formatter?: Function}> = [
+      {name: "共有章节", prop: "total", formatter: formatNum},
+      {name: "当前章节", prop: "chapter", idx: true},
+      {
+        name: "共有字数",
+        prop: "num",
+        formatter: formatNum
+      },
+      {
+        name: "文件大小",
+        prop: "size",
+        formatter: formatNum
+      },
+      {
+        name: "最近阅读",
+        prop: "updateTime",
+        formatter: (v: number) => {
+          const d = new Date(v);
+          return `${d.getFullYear()}-${
+            d.getMonth() + 1
+          }-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
         }
-      ];
+      }
+    ];
     // if (isElectron()) {
     //   list.push({
     //     name: "文件路径",
@@ -47,7 +46,7 @@
 
   type StateType = {
     isEdit: boolean;
-    checkMap: { [n: string]: boolean };
+    checkMap: {[n: string]: boolean};
     isAll: boolean;
     disable: boolean;
     isDetail: boolean;
@@ -80,13 +79,13 @@
     if (state.isEdit) {
       onCheckItem(item);
     } else {
-      if (!isElectron() && !fileMap[item.id]) return alert('请选择文件');
+      if (!isElectron() && !fileMap[item.id]) return alert("请选择文件");
       selectBook.value = item.id;
       bookItem.value = item;
     }
   };
   const updateSort = () => {
-    localStorage.setItem('sortType', sortType.value);
+    localStorage.setItem("sortType", sortType.value);
     sortBookList(dataList.value);
   };
   const onDelTxt = (isFile?: boolean) => {
@@ -107,7 +106,7 @@
     if (bookItem.value) Controller.openPath(bookItem.value.path);
   };
   const onDelOneTxt = (isFile?: boolean) => {
-    Controller.delTxt({ [bookItem.value!.id]: true }, isFile);
+    Controller.delTxt({[bookItem.value!.id]: true}, isFile);
     state.checkMap = {};
     state.isDetail = false;
     state.isEdit = false;
@@ -115,21 +114,21 @@
   const onAll = () => {
     state.isAll = !state.isAll;
     if (state.isAll) {
-      for (let k in state.checkMap) {
-        state.checkMap[k] = true;
-      }
+      showDataList.value.forEach((a) => {
+        state.checkMap[a.id] = true;
+      });
     } else {
       state.checkMap = {};
     }
   };
   const onCheckItem = (item: BookType) => {
     state.checkMap[item.id] = !state.checkMap[item.id];
-    console.log(state.checkMap);
+    // console.log(state.checkMap);
     let count = 0;
     for (let k in state.checkMap) {
       if (state.checkMap[k]) count++;
     }
-    if (count === Object.keys(state.checkMap).length) {
+    if (count === dataList.value.length) {
       state.isAll = true;
     } else if (count === 0) {
       state.isAll = false;
@@ -146,7 +145,7 @@
   };
   //显示书名
   const getTitle = (t: string) => {
-    return t.replace(/[,，！!、]/g, '').substring(0, 20);
+    return t.replace(/[,，！!、]/g, "").substring(0, 20);
   };
   const onDragOver = (ev: DragEvent) => {
     ev.preventDefault();
@@ -158,9 +157,9 @@
       const items = ev.dataTransfer.items;
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        if (item.type === 'file') {
+        if (item.type === "file") {
           const f = item.getAsFile()!;
-          if (f.name.endsWith('.txt')) {
+          if (f.name.endsWith(".txt")) {
             fileList.push(f);
           }
         }
@@ -168,7 +167,7 @@
     }
 
     if (fileList.length === 0 && ev.dataTransfer?.files?.length) {
-      fileList = Array.from(ev.dataTransfer.files).filter((it) => it.name.endsWith('.txt'));
+      fileList = Array.from(ev.dataTransfer.files).filter((it) => it.name.endsWith(".txt"));
     }
     if (fileList.length) {
       Controller.openTxtInfo(fileList);
@@ -176,12 +175,12 @@
   };
   onMounted(() => {
     getData();
-    document.addEventListener('dragover', onDragOver);
-    document.addEventListener('drop', onDropFile);
+    document.addEventListener("dragover", onDragOver);
+    document.addEventListener("drop", onDropFile);
   });
   onBeforeUnmount(() => {
-    document.removeEventListener('dragover', onDragOver);
-    document.removeEventListener('drop', onDropFile);
+    document.removeEventListener("dragover", onDragOver);
+    document.removeEventListener("drop", onDropFile);
   });
 </script>
 
@@ -193,11 +192,7 @@
     </div>
   </div>
   <div class="tool-bar">
-    <i
-      title="是否开启批量操作"
-      :class="['iconfont icon-setting', state.isEdit ? 'active' : '']"
-      @click="onBatch"
-    ></i>
+    <i title="是否开启批量操作" :class="['iconfont icon-setting', state.isEdit ? 'active' : '']" @click="onBatch"></i>
     <button v-if="!state.isEdit" @click="openTxt()" :disabled="state.disable">导入</button>
 
     <i v-if="state.isEdit" :class="['check', state.isAll ? 'active' : '']" @click="onAll()"></i>
