@@ -126,16 +126,13 @@ export const startSpeak = async () => {
         }
       };
       t.onend = () => {
-        voiceSet.utterance = undefined;
-        voiceSet.txt = "";
+        refreshSpeak();
         EventBus.emit("nextPage");
       };
       t.onerror = (err) => {
         console.log("🚀 ~  err:", err);
         // isPlay.value = false;
-        voiceSet.utterance = undefined;
-        speechSynthesis.cancel();
-        voiceSet.txt = "";
+        refreshSpeak();
         if (err.error === "interrupted") {
           sleep(500).then(() => {
             startSpeak();
@@ -147,6 +144,14 @@ export const startSpeak = async () => {
     }
   } else {
     speechSynthesis.pause();
+  }
+};
+export const refreshSpeak = () => {
+  voiceSet.utterance = undefined;
+  voiceSet.txt = "";
+  speechSynthesis.cancel();
+  if (beforeRange) {
+    removeHighlight(beforeRange);
   }
 };
 export const stopSpeak = () => {

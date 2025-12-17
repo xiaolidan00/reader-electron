@@ -15,6 +15,7 @@
         <i @click="onPlay()" :class="['iconfont', isPlay ? 'icon-pause' : 'icon-play']"> </i>
         <i @click="onBtnAction('nextPage')" class="iconfont icon-arrow"> </i>
         <i @click="onBtnAction('nextChapter')" class="iconfont icon-next"> </i>
+        <i @click="onBtnAction('refresh')" class="iconfont icon-shuaxin"> </i>
       </div>
       <div class="speed">
         <span
@@ -38,7 +39,8 @@
     isPlay,
     speakState as state,
     bookState,
-    startSpeak
+    startSpeak,
+    refreshSpeak
   } from "../config.ts";
   import {nextTick} from "vue";
 
@@ -66,8 +68,13 @@
   const changeIndex = () => {
     emit("index", currentIndex.value);
   };
-  const onBtnAction = (type: "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
-    emit(type);
+  const onBtnAction = (type: "refresh" | "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
+    if (type === "refresh") {
+      refreshSpeak();
+      onSpeak();
+    } else {
+      emit(type);
+    }
   };
 
   const onSpeed = (i: number) => {
