@@ -94,7 +94,7 @@ export const startSpeak = async () => {
     console.log(voiceSet.txt != str);
     if (voiceSet.txt != str) {
       speechSynthesis.cancel();
-      const t = new SpeechSynthesisUtterance(str.replace(/[\_\-\+=\*#]+/g, ""));
+      const t = new SpeechSynthesisUtterance(str);
 
       t.rate = speakState.speed;
       t.volume = 1;
