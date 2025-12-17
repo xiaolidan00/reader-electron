@@ -4,17 +4,9 @@
       <div class="title" v-if="chapterList.length && chapterList[currentChapter]">
         {{ chapterList[currentChapter].title }}
       </div>
-      <div style="padding: 10px; text-align: center">
-        {{ currentIndex + 1 }}/{{ bookState.total }}
-      </div>
+      <div style="padding: 10px; text-align: center">{{ currentIndex + 1 }}/{{ bookState.total }}</div>
       <div class="progress">
-        <input
-          type="range"
-          v-model="currentIndex"
-          @click="changeIndex()"
-          :min="0"
-          :max="bookState.total - 1"
-        />
+        <input type="range" v-model="currentIndex" @click="changeIndex()" :min="0" :max="bookState.total - 1" />
       </div>
 
       <div class="control">
@@ -38,144 +30,60 @@
 </template>
 
 <script setup lang="ts">
-  import Drawer from './Drawer.vue';
+  import Drawer from "./Drawer.vue";
   import {
     currentChapter,
     chapterList,
     currentIndex,
     isPlay,
-    removeHighlight,
-    setHighlight,
-    bookState
-  } from '../config.ts';
-  import { reactive, onMounted, onBeforeUnmount, nextTick } from 'vue';
+    speakState as state,
+    bookState,
+    startSpeak
+  } from "../config.ts";
+  import {nextTick} from "vue";
 
-  const emit = defineEmits([
-    'update:isListen',
-    'index',
-    'preChapter',
-    'nextChapter',
-    'prePage',
-    'nextPage'
-  ]);
+  const emit = defineEmits(["update:isListen", "index", "preChapter", "nextChapter", "prePage", "nextPage"]);
 
   const speeds = [
-    { name: '0.5X', value: 0.5 },
-    { name: '1.0X', value: 1 },
-    { name: '1.2X', value: 1.2 },
-    { name: '1.5X', value: 1.5 },
-    { name: '1.8X', value: 1.8 },
-    { name: '2.0X', value: 2 }
+    {name: "0.5X", value: 0.5},
+    {name: "1.0X", value: 1},
+    {name: "1.2X", value: 1.2},
+    {name: "1.5X", value: 1.5},
+    {name: "1.8X", value: 1.8},
+    {name: "2.0X", value: 2}
   ];
-  type StateType = {
-    voice: number;
-    speed: number;
-  };
-  const state = reactive<StateType>({
-    voice: Number(localStorage.getItem('voice')) || 0,
 
-    speed: Number(localStorage.getItem('speed')) || 1.5
-  });
   withDefaults(
     defineProps<{
       isListen: boolean;
     }>(),
-    { isListen: false }
+    {isListen: false}
   );
 
   const onHide = () => {
-    emit('update:isListen', false);
+    emit("update:isListen", false);
   };
   const changeIndex = () => {
-    emit('index', currentIndex.value);
+    emit("index", currentIndex.value);
   };
-  const onBtnAction = (type: 'preChapter' | 'nextChapter' | 'prePage' | 'nextPage') => {
+  const onBtnAction = (type: "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
     emit(type);
-  };
-
-  const stopPlay = () => {
-    isPlay.value = false;
-    speechSynthesis.pause();
   };
 
   const onSpeed = (i: number) => {
     state.speed = i;
-    localStorage.setItem('speed', i + '');
+    localStorage.setItem("speed", i + "");
     if (isPlay.value) onSpeak();
   };
   const onPlay = () => {
     isPlay.value = !isPlay.value;
     onSpeak();
   };
-  const voiceSet: { txt: string; utterance?: SpeechSynthesisUtterance } = {
-    txt: ''
-  };
-  let beforeRange: Range;
+
   const onSpeak = async () => {
     await nextTick();
-
-    if (isPlay.value) {
-      const contenTxt = document.getElementById('bookContainer')!;
-      const str = contenTxt.innerText;
-      if (voiceSet.txt != str) {
-        speechSynthesis.cancel();
-        const t = new SpeechSynthesisUtterance(str.replace(/[\_\-\+=\*]+/g, ''));
-
-        t.rate = state.speed;
-        t.volume = 100;
-        speechSynthesis.speak(t);
-        voiceSet.txt = str;
-        voiceSet.utterance = t;
-        t.onboundary = (e: SpeechSynthesisEvent) => {
-          const dom = document.getElementById('contenTxt')!;
-          if (beforeRange) {
-            removeHighlight(beforeRange);
-          }
-          const textNode = dom.firstChild;
-          if (textNode) beforeRange = setHighlight(e.charIndex, textNode, e.charLength);
-        };
-        t.onend = () => {
-          emit('nextPage');
-        };
-        t.onerror = (err) => {
-          // console.log("🚀 ~ ListenPage.vue ~ onSpeak ~ err:", err);
-          isPlay.value = false;
-          speechSynthesis.cancel();
-          voiceSet.txt = '';
-        };
-      } else if (voiceSet.utterance) {
-        speechSynthesis.resume();
-      }
-    } else {
-      speechSynthesis.pause();
-    }
+    startSpeak();
   };
-  // const onVisibilitychange = () => {
-  //   if (isMobile() && !props.isListen) {
-  //     speechSynthesis.cancel();
-  //   }
-  // };
-
-  onMounted(() => {
-    // if (isMobile()) {
-    //   document.addEventListener("visibilitychange", onVisibilitychange);
-    // }
-
-    navigator.mediaDevices.addEventListener('devicechange', stopPlay);
-  });
-  onBeforeUnmount(() => {
-    // if (isMobile()) {
-    //   document.removeEventListener("visibilitychange", onVisibilitychange);
-    // }
-
-    isPlay.value = false;
-    speechSynthesis.cancel();
-    navigator.mediaDevices.removeEventListener('devicechange', stopPlay);
-  });
-  defineExpose({
-    onSpeak,
-    stopPlay
-  });
 </script>
 
 <style scoped lang="scss">

@@ -84,12 +84,12 @@
   import Controller from "../controllers/Controller.ts";
 
   const state = reactive({
-    regexType: bookItem.value!.regexType ?? -1,
+    regexType: -1,
 
-    regex: bookItem.value!.regex || "",
+    regex: "",
     startChapter: 1,
     endChapter: 100,
-    encode: bookItem.value!.encode || "UTF-8"
+    encode: "UTF-8"
   });
   withDefaults(
     defineProps<{
@@ -122,6 +122,9 @@
   };
 
   const onShow = () => {
+    state.regexType = bookItem.value!.regexType ?? -1;
+    state.regex = bookItem.value!.regex || "";
+    state.encode = bookItem.value!.encode || "UTF-8";
     state.startChapter = 1;
     state.endChapter = bookItem.value!.total;
   };

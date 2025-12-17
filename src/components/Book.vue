@@ -9,6 +9,7 @@
     <div class="book-container" ref="bookContainer" id="bookContainer" @click="onClickPage">
       <div
         class="chapter-title"
+        id="titleTxt"
         v-if="chapterList.length && currentIndex == 0 && chapterList[currentChapter]"
       >
         {{ chapterList[currentChapter].title }}
@@ -17,11 +18,7 @@
     </div>
     <div class="book-bottom">
       <i class="iconfont icon-menu" title="章节目录" @click="state.isMenu = true"></i>
-      <i
-        :class="['iconfont icon-listen', isPlay ? 'active' : '']"
-        title="听书"
-        @click="state.isListen = true"
-      ></i>
+      <i :class="['iconfont icon-listen', isPlay ? 'active' : '']" title="听书" @click="state.isListen = true"></i>
       <i class="iconfont icon-search" title="搜索关键词" @click="state.isSearch = true"></i>
       <i class="iconfont icon-setting" title="读书设置" @click="state.isSet = true"></i>
       <i class="iconfont icon-save" @click="onSaveTxt()" title="另存为带章节目录TXT"></i>
@@ -35,7 +32,6 @@
   </div>
   <ChapterPage v-model:is-menu="state.isMenu" @item="onChapterItem"></ChapterPage>
   <ListenPage
-    ref="listenRef"
     v-model:is-listen="state.isListen"
     @preChapter="preChapter"
     @nextChapter="nextChapter"
@@ -48,12 +44,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, nextTick, onBeforeUnmount, onMounted } from 'vue';
-  import type { ChapterType, SearchItemType } from '../@types';
-  import SearchPage from './SearchPage.vue';
-  import ChapterPage from './ChapterPage.vue';
-  import ListenPage from './ListenPage.vue';
-  import SetPage from './SetPage.vue';
+  import {ref, nextTick, onBeforeUnmount, onMounted, watch} from "vue";
+  import type {ChapterType, SearchItemType} from "../@types";
+  import SearchPage from "./SearchPage.vue";
+  import ChapterPage from "./ChapterPage.vue";
+  import ListenPage from "./ListenPage.vue";
+  import SetPage from "./SetPage.vue";
 
   import {
     selectBook,
@@ -68,21 +64,21 @@
     isPlay,
     bookStyle,
     bookState as state,
-    defaultBookState
-  } from '../config.ts';
-  import Controller from '../controllers/Controller.ts';
-  import { EventBus } from '../utils/EventEmitter.ts';
-  import { copyStr, isMobile } from '../utils/utils.ts';
-  import { cloneDeep, debounce } from 'lodash-es';
+    defaultBookState,
+    stopSpeak,
+    startSpeak
+  } from "../config.ts";
+  import Controller from "../controllers/Controller.ts";
+  import {EventBus} from "../utils/EventEmitter.ts";
+  import {isMobile} from "../utils/utils.ts";
+  import {cloneDeep, debounce} from "lodash-es";
 
-  //<InstanceType<typeof ListenPage>>
-  const listenRef = ref();
   const bookContainer = ref<HTMLDivElement>();
   loading.value = true;
 
   const updateBook = async () => {
     await Controller.saveBook(
-      selectBook.value + '',
+      selectBook.value + "",
       currentChapter.value,
       currentIndex.value,
       chapterList.value.length
@@ -90,11 +86,11 @@
   };
 
   const onCopyText = () => {
-    const dom = document.getElementById('bookContainer');
+    const dom = document.getElementById("bookContainer");
     if (dom) {
       navigator.clipboard.writeText(dom.innerText);
 
-      alert('复制成功');
+      alert("复制成功");
     }
   };
   const onSearchItem = async ({
@@ -111,14 +107,14 @@
     onChapter(item.chapter, 2);
 
     await nextTick();
-    const contenTxt = document.getElementById('contenTxt')!;
+    const contenTxt = document.getElementById("contenTxt")!;
     const textNode = contenTxt.firstChild;
     if (textNode) setHighlight(textNode.textContent!.indexOf(searchKey), textNode, searchLen);
   };
 
   const onBack = () => {
     updateBook();
-    selectBook.value = '';
+    selectBook.value = "";
     bookItem.value = undefined;
     currentChapter.value = 0;
     currentIndex.value = 0;
@@ -163,10 +159,16 @@
       }
     }
   };
-
-  const changeIndex = () => {
+  watch(
+    () => isPlay.value,
+    (val) => {
+      console.log("isPlay.value", val);
+    }
+  );
+  const changeIndex = async () => {
     getPage();
-    if (listenRef.value) listenRef.value.onSpeak();
+    await nextTick();
+    startSpeak();
   };
   const nextChapter = () => {
     if (currentChapter.value < chapterList.value.length) {
@@ -177,7 +179,7 @@
   const getPage = () => {
     const a = currentIndex.value * PageNum.value - titleLine;
     const b = (currentIndex.value + 1) * PageNum.value - titleLine;
-    state.value.showContent = state.value.detail.slice(a < 0 ? 0 : a, b).join('');
+    state.value.showContent = state.value.detail.slice(a < 0 ? 0 : a, b).join("");
   };
 
   const onChapter = (i: number, type: 0 | 1 | 2) => {
@@ -214,14 +216,14 @@
       state.value.title = bookItem.value!.name;
       currentChapter.value = bookItem.value.chapter;
       currentIndex.value = bookItem.value.index;
-      console.log('chapter', currentChapter.value, 'index', currentIndex.value);
+      console.log("chapter", currentChapter.value, "index", currentIndex.value);
       isFirst = false;
     }
 
     if (data.length) {
       chapterList.value = data;
     } else {
-      alert('章节解析失败');
+      alert("章节解析失败");
 
       onBack();
       return;
@@ -230,25 +232,25 @@
     onChapter(currentChapter.value, 2);
     loading.value = false;
   };
-  const onSaveTxt = (op?: { start: number; end: number }) => {
+  const onSaveTxt = (op?: {start: number; end: number}) => {
     const start = op?.start || 1;
     const end = op?.end || chapterList.value.length;
-    const fileName = bookItem.value!.name + `（带章节目录）${op ? start + '-' + end : ''}.txt`;
-    let txt = '';
+    const fileName = bookItem.value!.name + `（带章节目录）${op ? start + "-" + end : ""}.txt`;
+    let txt = "";
     const t0 = chapterList.value[0];
-    txt += t0.title + '\n';
-    txt += t0.content.join('') + '\n';
+    txt += t0.title + "\n";
+    txt += t0.content.join("") + "\n";
     for (let i = start; i < end; i++) {
       const it = chapterList.value[i];
       let t = it.title;
       if (/\s*第\s*[0-9]+\s*章/.test(t)) {
-        t = t.replace(/\s*第\s*[0-9]+\s*章/g, '');
+        t = t.replace(/\s*第\s*[0-9]+\s*章/g, "");
       }
-      txt += `第${i}章 ` + t + '\n';
-      txt += it.content.join('') + '\n';
+      txt += `第${i}章 ` + t + "\n";
+      txt += it.content.join("") + "\n";
     }
-    const file = new File([txt], fileName, { type: 'text/plain' });
-    const dom = document.createElement('a');
+    const file = new File([txt], fileName, {type: "text/plain"});
+    const dom = document.createElement("a");
     dom.download = fileName;
     dom.href = window.URL.createObjectURL(file);
     document.body.appendChild(dom);
@@ -256,15 +258,15 @@
   };
 
   const updateStyle = () => {
-    const container = document.getElementById('bookContainer')!;
+    const container = document.getElementById("bookContainer")!;
     const fontSize = bookStyle.fontSize * bookStyle.lineHeight;
     LineNum.value = Math.floor((container.offsetWidth - 20) / bookStyle.fontSize);
     PageNum.value = Math.floor((container.offsetHeight - 20) / fontSize);
 
-    document.documentElement.style.setProperty('--font', bookStyle.fontColor);
-    document.documentElement.style.setProperty('--bg', bookStyle.bg);
-    document.documentElement.style.setProperty('--font-size', bookStyle.fontSize + 'px');
-    document.documentElement.style.setProperty('--line-height', bookStyle.lineHeight + '');
+    document.documentElement.style.setProperty("--font", bookStyle.fontColor);
+    document.documentElement.style.setProperty("--bg", bookStyle.bg);
+    document.documentElement.style.setProperty("--font-size", bookStyle.fontSize + "px");
+    document.documentElement.style.setProperty("--line-height", bookStyle.lineHeight + "");
     Controller.readTxt();
   };
   const onUnload = async () => {
@@ -319,31 +321,33 @@
   };
 
   const onKeyup = debounce((ev: KeyboardEvent) => {
-    if (ev.key === 'ArrowRight') {
+    if (ev.key === "ArrowRight") {
       nextPage();
-    } else if (ev.key === 'ArrowLeft') {
+    } else if (ev.key === "ArrowLeft") {
       prePage();
-    } else if (ev.code === 'Space' && listenRef.value) {
+    } else if (ev.code === "Space") {
+      isPlay.value = !isPlay.value;
       if (isPlay.value) {
-        listenRef.value.onSpeak();
+        startSpeak();
       } else {
-        listenRef.value.stopPlay();
+        stopSpeak();
       }
     }
   }, 100);
   onMounted(() => {
-    window.history.pushState(null, 'book', document.URL);
-    window.addEventListener('popstate', onBack, false);
+    window.history.pushState(null, "book", document.URL);
+    window.addEventListener("popstate", onBack, false);
 
     updateStyle();
-    EventBus.on('readTxt', onReadTxt);
-    EventBus.on('backTxt', onBack);
+    EventBus.on("readTxt", onReadTxt);
+    EventBus.on("backTxt", onBack);
+    EventBus.on("nextPage", nextPage);
     window.onunload = onUnload;
     if (isMobile()) {
       const dom = bookContainer.value!;
-      dom.addEventListener('touchstart', onMouseDown, { passive: false });
-      dom.addEventListener('touchmove', onMouseMove, { passive: false });
-      dom.addEventListener('touchend', onMouseUp, { passive: false });
+      dom.addEventListener("touchstart", onMouseDown, {passive: false});
+      dom.addEventListener("touchmove", onMouseMove, {passive: false});
+      dom.addEventListener("touchend", onMouseUp, {passive: false});
       window.ontouchstart = null;
       window.ontouchmove = null;
       window.ontouchend = null;
@@ -351,28 +355,27 @@
       document.body.ontouchmove = null;
       document.body.ontouchend = null;
     }
-    document.body.addEventListener('keyup', onKeyup);
+    document.body.addEventListener("keyup", onKeyup);
+    navigator.mediaDevices.addEventListener("devicechange", stopSpeak);
   });
 
   onBeforeUnmount(async () => {
     if (isMobile()) {
       const dom = bookContainer.value!;
-      dom.removeEventListener('touchstart', onMouseDown);
-      dom.removeEventListener('touchmove', onMouseMove);
-      dom.removeEventListener('touchend', onMouseUp);
+      dom.removeEventListener("touchstart", onMouseDown);
+      dom.removeEventListener("touchmove", onMouseMove);
+      dom.removeEventListener("touchend", onMouseUp);
     }
-    document.body.removeEventListener('keyup', onKeyup);
+    document.body.removeEventListener("keyup", onKeyup);
     await updateBook();
-    window.removeEventListener('popstate', onBack, false);
+    window.removeEventListener("popstate", onBack, false);
 
-    EventBus.off('readTxt', onReadTxt);
-    EventBus.off('backTxt', onBack);
-    Controller.saveBook(
-      selectBook.value + '',
-      currentChapter.value,
-      currentIndex.value,
-      chapterList.value.length
-    );
+    EventBus.off("readTxt", onReadTxt);
+    EventBus.off("backTxt", onBack);
+    EventBus.off("nextPage", nextPage);
+    Controller.saveBook(selectBook.value + "", currentChapter.value, currentIndex.value, chapterList.value.length);
+    stopSpeak();
+    navigator.mediaDevices.removeEventListener("devicechange", stopSpeak);
   });
 </script>
 
