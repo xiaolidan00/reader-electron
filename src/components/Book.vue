@@ -3,7 +3,7 @@
     <div class="nav-back">
       <i class="iconfont icon-arrow back-icon" @click="onBack()"></i>
       <span class="title">{{ state.title }}</span>
-      {{ currentChapter + 1 }} /{{ chapterList.length }}
+      <span class="num"> {{ currentChapter + 1 }} /{{ chapterList.length }}</span>
     </div>
 
     <div class="book-container" ref="bookContainer" id="bookContainer" @click="onClickPage">
@@ -426,16 +426,20 @@
     padding: 0 10px;
     display: flex;
     align-items: center;
-    font-size: 16px;
+    gap: 10px;
+    .num {
+      font-size: 12px;
+    }
     .title {
       display: inline-block;
-      width: calc(100% - 100px);
+
       overflow: hidden;
-
+      font-size: 16px;
       white-space: nowrap;
-
+      flex: 1;
       font-weight: bold;
       text-align: center;
+      text-overflow: ellipsis;
     }
     .back-icon {
       font-size: 20px;
