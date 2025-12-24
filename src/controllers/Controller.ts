@@ -135,7 +135,7 @@ export default {
         upload = document.createElement('input') as HTMLInputElement;
         upload.id = 'uploadFile';
         upload.type = 'file';
-        upload.accept = '.txt';
+        upload.accept = '.txt,.md';
         upload.style.position = 'fixed';
         upload.style.opacity = '0';
         upload.multiple = true;

@@ -13,6 +13,7 @@ export const chapterRegex = [
   { name: '一零零 标题', value: /\s*[一二三四五六七八九十零百千万]+/.source },
   { name: '（100）标题', value: /\s*[\(|（][0-9]+[\)|）]/.source },
   { name: '（一零零） 标题', value: /\s*[\(|（][一二三四五六七八九十零百千万]+[\)|）]/.source },
+  { name: '# 标题', value: /^#+\s*.+/.source },
   { name: '没有标点符号的标题', value: /^[0-9a-zA-Z\u4e00-\u9fa5]+$/.source }
 ];
 
@@ -25,8 +26,8 @@ export const encodeList = [
 ];
 
 export const sortList = [
-  { label: '时间升序', value: 'updateTimeAsc' },
-  { label: '时间降序', value: 'updateTimeDesc' },
+  { label: '更新时间升序', value: 'updateTimeAsc' },
+  { label: '更新时间降序', value: 'updateTimeDesc' },
   { label: '文件名称升序', value: 'nameAsc' },
   { label: '文件名称降序', value: 'nameDesc' },
   { label: '文件大小升序', value: 'sizeAsc' },
