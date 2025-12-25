@@ -6,7 +6,14 @@
           <tr>
             <td>字体大小</td>
             <td>
-              <input type="number" :min="12" :max="30" :step="1" v-model="bookStyle.fontSize" @change="onChangeStyle" />
+              <input
+                type="number"
+                :min="12"
+                :max="30"
+                :step="1"
+                v-model="bookStyle.fontSize"
+                @change="onChangeStyle"
+              />
             </td>
           </tr>
           <tr>
@@ -46,7 +53,12 @@
           <tr>
             <td>正则表达式</td>
             <td>
-              <input v-model="state.regex" :disabled="state.regexType != -2" @change="onRegex" type="text" />
+              <input
+                v-model="state.regex"
+                :disabled="state.regexType != -2"
+                @change="onRegex"
+                type="text"
+              />
             </td>
           </tr>
           <tr>
@@ -62,8 +74,20 @@
           <tr>
             <td>导出部分章节</td>
             <td>
-              <input type="number" class="chapter-input" v-model="state.startChapter" />~
-              <input type="number" class="chapter-input" v-model="state.endChapter" />
+              <input
+                type="number"
+                min="0"
+                step="1"
+                class="chapter-input"
+                v-model="state.startChapter"
+              />~
+              <input
+                :min="state.startChapter + 1"
+                step="1"
+                type="number"
+                class="chapter-input"
+                v-model="state.endChapter"
+              />
             </td>
           </tr>
           <tr>
@@ -77,33 +101,33 @@
 </template>
 
 <script setup lang="ts">
-  import Drawer from "./Drawer.vue";
-  import {chapterRegex, encodeList} from "../data";
-  import {bookItem, bookStyle, currentChapter, currentIndex} from "../config.ts";
-  import {reactive} from "vue";
-  import Controller from "../controllers/Controller.ts";
+  import Drawer from './Drawer.vue';
+  import { chapterRegex, encodeList } from '../data';
+  import { bookItem, bookStyle, currentChapter, currentIndex } from '../config.ts';
+  import { reactive } from 'vue';
+  import Controller from '../controllers/Controller.ts';
 
   const state = reactive({
     regexType: -1,
 
-    regex: "",
+    regex: '',
     startChapter: 1,
     endChapter: 100,
-    encode: "UTF-8"
+    encode: 'UTF-8'
   });
   withDefaults(
     defineProps<{
       isSet: boolean;
     }>(),
-    {isSet: false, total: 0}
+    { isSet: false, total: 0 }
   );
-  const emit = defineEmits(["update:isSet", "exportTxt", "changeStyle"]);
+  const emit = defineEmits(['update:isSet', 'exportTxt', 'changeStyle']);
   const onHide = () => {
-    emit("update:isSet", false);
+    emit('update:isSet', false);
   };
   const onChangeStyle = () => {
-    localStorage.setItem("bookStyle", JSON.stringify(bookStyle));
-    emit("changeStyle");
+    localStorage.setItem('bookStyle', JSON.stringify(bookStyle));
+    emit('changeStyle');
   };
   const onEncode = () => {
     bookItem.value!.encode = state.encode;
@@ -118,18 +142,18 @@
     }
     currentChapter.value = 0;
     currentIndex.value = 0;
-    Controller.changeRegex({regex: state.regex, regexType: state.regexType});
+    Controller.changeRegex({ regex: state.regex, regexType: state.regexType });
   };
 
   const onShow = () => {
     state.regexType = bookItem.value!.regexType ?? -1;
-    state.regex = bookItem.value!.regex || "";
-    state.encode = bookItem.value!.encode || "UTF-8";
-    state.startChapter = 1;
+    state.regex = bookItem.value!.regex || '';
+    state.encode = bookItem.value!.encode || 'UTF-8';
+    state.startChapter = 0;
     state.endChapter = bookItem.value!.total;
   };
   const onExportChapter = () => {
-    emit("exportTxt", {start: state.startChapter, end: state.endChapter});
+    emit('exportTxt', { start: state.startChapter, end: state.endChapter });
   };
 </script>
 
@@ -138,9 +162,9 @@
     line-height: 40px;
     padding: 20px;
     select,
-    input[type="number"],
-    input[type="text"],
-    input[type="color"],
+    input[type='number'],
+    input[type='text'],
+    input[type='color'],
     .chapter-input {
       background-color: rgba(255, 255, 255, 0.3);
       border: none;
@@ -166,7 +190,7 @@
     .chapter-input {
       width: 100px !important;
     }
-    input[type="text"]:disabled {
+    input[type='text']:disabled {
       background-color: rgba(0, 0, 0, 0.1);
     }
     table {
