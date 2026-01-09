@@ -153,6 +153,8 @@ export const refreshSpeak = () => {
   if (beforeRange) {
     removeHighlight(beforeRange);
   }
+  isPlay.value = true;
+  startSpeak();
 };
 export const stopSpeak = () => {
   isPlay.value = false;
