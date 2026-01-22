@@ -222,7 +222,8 @@
     document.removeEventListener("drop", onDropFile);
   });
   useEventBus("refreshList", (v: BookType[]) => {
-    state.dataList = v;
+    console.log("🚀 ~ v:", v)
+    state.dataList = [...v];
   });
 </script>
 
