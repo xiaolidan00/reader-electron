@@ -173,11 +173,15 @@ export default {
     this.dataList = this.dataList.filter((a) => {
       if (delBooks[a.id]) {
         files.push(a.path);
+        if (!isElectron()) {
+          delete fileMap[a.id];
+        }
         return false;
       }
 
       return true;
     });
+
     this.save(this.dataList);
     if (isFile) {
       await waitAction({
