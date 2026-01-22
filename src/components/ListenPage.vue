@@ -1,23 +1,21 @@
 <template>
-  <Drawer :show="isListen" @hide="onHide">
+  <Drawer :show="state.isListen" @hide="onHide">
     <div class="listen">
-      <div class="title" v-if="chapterList.length && chapterList[currentChapter]">
-        {{ chapterList[currentChapter].title }}
+      <div class="title" v-if="state.chapterList.length && state.chapterList[state.currentChapter]">
+        {{ state.chapterList[state.currentChapter].title }}
       </div>
+      <div style="padding: 10px; text-align: center">{{ state.currentIndex + 1 }}/{{ state.total }}</div>
       <div class="progress">
-        <input type="range" v-model="currentIndex" @click="changeIndex()" :min="0" :max="total - 1" />
+        <input type="range" v-model="state.currentIndex" @click="changeIndex()" :min="0" :max="state.total - 1" />
       </div>
 
       <div class="control">
-        <span @click="preChapter()">
-          <i class="pre-icon"></i>
-        </span>
-        <span @click="onPlay()">
-          <i :class="[isPlay ? 'stop-icon' : 'play-icon']"></i>
-        </span>
-        <span @click="nextChapter()">
-          <i class="next-icon"></i>
-        </span>
+        <i @click="onBtnAction('preChapter')" class="iconfont icon-next"> </i>
+        <i @click="onBtnAction('prePage')" class="iconfont icon-arrow"> </i>
+        <i @click="onPlay()" :class="['iconfont', state.isPlay ? 'icon-pause' : 'icon-play']"> </i>
+        <i @click="onBtnAction('nextPage')" class="iconfont icon-arrow"> </i>
+        <i @click="onBtnAction('nextChapter')" class="iconfont icon-next"> </i>
+        <i @click="onBtnAction('refresh')" class="iconfont icon-shuaxin"> </i>
       </div>
       <div class="speed">
         <span
@@ -33,11 +31,13 @@
 </template>
 
 <script setup lang="ts">
+  import {BookStoreType} from "../@types";
+  import {TTSUtuil} from "../utils/ttsUtil";
   import Drawer from "./Drawer.vue";
-  import {currentChapter, chapterList, currentIndex, isPlay, removeHighlight, setHighlight} from "../config.ts";
-  import {reactive, onMounted, onBeforeUnmount, watch, nextTick} from "vue";
 
-  const emit = defineEmits(["update:isListen", "index", "pre", "next", "nextPage"]);
+  import {inject} from "vue";
+
+  const emit = defineEmits(["index", "preChapter", "nextChapter", "prePage", "nextPage"]);
 
   const speeds = [
     {name: "0.5X", value: 0.5},
@@ -47,127 +47,38 @@
     {name: "1.8X", value: 1.8},
     {name: "2.0X", value: 2}
   ];
-  type StateType = {
-    voice: number;
-    speed: number;
-  };
-  const state = reactive<StateType>({
-    voice: Number(localStorage.getItem("voice")) || 0,
-
-    speed: Number(localStorage.getItem("speed")) || 1
-  });
-  withDefaults(
-    defineProps<{
-      isListen: boolean;
-      total: number;
-    }>(),
-    {isListen: false, total: 0}
-  );
-
+  const props = withDefaults(defineProps<{tts: TTSUtuil}>(), {});
+  const state = inject<BookStoreType>("BookStore")!;
   const onHide = () => {
-    emit("update:isListen", false);
+    state.isListen = false;
   };
   const changeIndex = () => {
-    emit("index", currentIndex.value);
+    emit("index", state.currentIndex);
   };
-  const preChapter = () => {
-    emit("pre");
-  };
-  const nextChapter = () => {
-    emit("next");
-  };
-  const stopPlay = () => {
-    isPlay.value = false;
-    speechSynthesis.pause();
+  const onBtnAction = (type: "refresh" | "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
+    if (type === "refresh") {
+      state.isPlay = true;
+      props.tts.speak();
+    } else {
+      emit(type);
+    }
   };
 
-  const onSpeed = (i: number) => {
+  const onSpeed = async (i: number) => {
     state.speed = i;
     localStorage.setItem("speed", i + "");
-    if (isPlay.value) onSpeak();
+    if (state.isPlay) {
+      await props.tts.play();
+    }
   };
-  const onPlay = () => {
-    isPlay.value = !isPlay.value;
-    onSpeak();
-  };
-  const voiceSet: {txt: string; utterance?: SpeechSynthesisUtterance} = {
-    txt: ""
-  };
-  let beforeRange: Range;
-  const onSpeak = async () => {
-    await nextTick();
-
-    if (isPlay.value) {
-      const contenTxt = document.getElementById("bookContainer")!;
-      const str = contenTxt.innerText;
-      if (voiceSet.txt != str) {
-        speechSynthesis.cancel();
-        const t = new SpeechSynthesisUtterance(str.replace(/[\_\-\+=\*]+/g, ""));
-
-        t.rate = state.speed;
-        t.volume = 100;
-        speechSynthesis.speak(t);
-        voiceSet.txt = str;
-        voiceSet.utterance = t;
-        t.onboundary = (e: SpeechSynthesisEvent) => {
-          const dom = document.getElementById("contenTxt")!;
-          if (beforeRange) {
-            removeHighlight(beforeRange);
-          }
-          const textNode = dom.firstChild;
-          if (textNode) beforeRange = setHighlight(e.charIndex, textNode, e.charLength);
-        };
-        t.onend = () => {
-          emit("nextPage");
-        };
-        t.onerror = (err) => {
-          // console.log("🚀 ~ ListenPage.vue ~ onSpeak ~ err:", err);
-          isPlay.value = false;
-          speechSynthesis.cancel();
-          voiceSet.txt = "";
-        };
-      } else if (voiceSet.utterance) {
-        speechSynthesis.resume();
-      }
+  const onPlay = async () => {
+    state.isPlay = !state.isPlay;
+    if (state.isPlay) {
+      await props.tts.play();
     } else {
-      speechSynthesis.pause();
+      props.tts.stop();
     }
   };
-  // const onVisibilitychange = () => {
-  //   if (isMobile() && !props.isListen) {
-  //     speechSynthesis.cancel();
-  //   }
-  // };
-  //按空格播放或停止
-  const onKeyup = (ev: KeyboardEvent) => {
-    if (ev.code === "Space") {
-      if (isPlay.value) {
-        onSpeak();
-      } else {
-        stopPlay();
-      }
-    }
-  };
-
-  onMounted(() => {
-    // if (isMobile()) {
-    //   document.addEventListener("visibilitychange", onVisibilitychange);
-    // }
-    document.body.addEventListener("keyup", onKeyup);
-    navigator.mediaDevices.addEventListener("devicechange", stopPlay);
-  });
-  onBeforeUnmount(() => {
-    // if (isMobile()) {
-    //   document.removeEventListener("visibilitychange", onVisibilitychange);
-    // }
-    document.body.removeEventListener("keyup", onKeyup);
-    isPlay.value = false;
-    speechSynthesis.cancel();
-    navigator.mediaDevices.removeEventListener("devicechange", stopPlay);
-  });
-  defineExpose({
-    onSpeak
-  });
 </script>
 
 <style scoped lang="scss">
@@ -225,27 +136,35 @@
     }
 
     .control {
-      padding: 20px 100px;
+      padding: 20px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      > span {
+      justify-content: center;
+      gap: 10px;
+      > i {
         height: 50px;
         width: 50px;
-
+        flex: none;
+        cursor: pointer;
+        font-size: 20px;
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background-color: gray;
+        color: white;
+        &:nth-child(1),
         &:nth-child(2) {
+          transform: rotate(180deg);
+        }
+        &:nth-child(3) {
           height: 80px;
           width: 80px;
+          font-size: 40px;
         }
-      }
-      i {
-        height: 30px;
-        width: 30px;
+        &:hover {
+          background-color: dodgerblue;
+        }
       }
     }
   }

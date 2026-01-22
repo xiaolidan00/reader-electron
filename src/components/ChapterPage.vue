@@ -1,14 +1,14 @@
 <template>
-  <Drawer :show="isMenu" @hide="onHide" :onShow="onShow">
+  <Drawer :show="bookStore.isMenu" @hide="onHide" :onShow="onShow">
     <div class="search-box">
       <div class="search">
-        <input placeholder="搜索关键词" type="text" v-model="state.searchKey" @change="onSearch()" />
-        <i v-show="state.searchKey" class="close-icon" @click="state.searchKey = ''"></i>
+        <input placeholder="搜索关键词" type="text" v-model="state.searchKey" />
+        <i v-show="state.searchKey" class="iconfont icon-close" @click="state.searchKey = ''"></i>
       </div>
     </div>
     <div class="nav-container" ref="navRef">
       <div
-        :class="['nav-item', currentChapter == item.index ? 'active' : '']"
+        :class="['nav-item', bookStore.currentChapter == item.index ? 'active' : '']"
         v-for="item in showChapterList"
         :key="item.index"
         @click.self="onChapterItem(item.index)"
@@ -22,37 +22,39 @@
 
 <script setup lang="ts">
   import Drawer from "./Drawer.vue";
-  import {currentChapter, chapterList} from "../config.ts";
-  import {computed, reactive, useTemplateRef} from "vue";
-  import {debounce} from "lodash-es";
+
+  import {computed, inject, reactive, useTemplateRef} from "vue";
+
+  import {BookStoreType} from "../@types";
+
   const navRef = useTemplateRef("navRef");
-  const props = defineProps({
-    isMenu: Boolean
-  });
+
+  const bookStore = inject<BookStoreType>("BookStore")!;
   const state = reactive({
     searchKey: ""
   });
   const showChapterList = computed(() => {
-    const list = chapterList.value;
+    const list = bookStore!.chapterList;
     if (state.searchKey) {
       return list.filter((a) => a.title.indexOf(state.searchKey) >= 0);
     }
     return list;
   });
-  const emit = defineEmits(["update:isMenu", "item"]);
+  const emit = defineEmits(["item"]);
   const onHide = () => {
-    emit("update:isMenu", false);
+    bookStore.isMenu = false;
   };
 
   const onChapterItem = (idx: number) => {
     emit("item", idx);
     // emit("update:isMenu", false);
   };
-  const onShow = debounce(() => {
-    if (props.isMenu && !state.searchKey) {
-      navRef.value?.scrollTo(0, (currentChapter.value - 1) * 40);
+  const onShow = () => {
+    //滚动定位到当前章节
+    if (!state.searchKey) {
+      navRef.value?.scrollTo(0, (bookStore.currentChapter - 1) * 40);
     }
-  }, 100);
+  };
 </script>
 
 <style scoped lang="scss">

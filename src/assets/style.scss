@@ -22,26 +22,7 @@ body,
   box-sizing: border-box !important;
   font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
 }
-.more-icon {
-  display: inline-block;
-  content: url(./images/more.svg);
-}
-.search-icon {
-  display: inline-block;
-  content: url(./images/search.svg);
-}
-.back-icon {
-  display: inline-block;
-  content: url(./images/back.svg);
-}
-.book-icon {
-  display: inline-block;
-  content: url(./images/book.svg);
-}
-.setting-icon {
-  display: inline-block;
-  content: url(./images/setting.svg);
-}
+
 @keyframes rotating {
   0% {
     transform: rotate(0deg);
@@ -53,39 +34,7 @@ body,
     transform: rotate(360deg);
   }
 }
-.loading-icon {
-  display: inline-block;
-  content: url(./images/loading.svg);
-  animation: rotating 1s linear infinite;
-}
-.listen-icon {
-  display: inline-block;
-  content: url(./images/listen.svg);
-}
-.play-icon {
-  display: inline-block;
-  content: url(./images/play.svg);
-}
-.pre-icon {
-  display: inline-block;
-  content: url(./images/pre.svg);
-}
-.next-icon {
-  display: inline-block;
-  content: url(./images/next.svg);
-}
-.stop-icon {
-  display: inline-block;
-  content: url(./images/stop.svg);
-}
-.save-icon {
-  display: inline-block;
-  content: url(./images/save.svg);
-}
-.close-icon {
-  display: inline-block;
-  content: url(./images/close.svg);
-}
+
 ::-webkit-scrollbar {
   background-color: transparent;
   height: 10px;
@@ -93,6 +42,15 @@ body,
 }
 ::-webkit-scrollbar-thumb {
   background-color: #ccc;
+}
+.open-text {
+  flex: 1;
+  text-align: right;
+  cursor: pointer;
+  color: dodgerblue;
+  margin-left: 10px;
+  display: inline-block;
+  white-space: nowrap;
 }
 .chapter-title {
   font-weight: bold;
@@ -122,8 +80,11 @@ body,
     outline: none;
   }
   i {
-    width: 20px;
-    height: 20px;
+    font-size: 20px;
+    color: gray;
+    &:hover {
+      color: dodgerblue;
+    }
   }
 }
 ::highlight(search-highlight) {
@@ -226,31 +187,53 @@ table.detail-table {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.5);
-  border: solid 2px rgba(255, 255, 255, 1);
+  background-color: rgba(255, 255, 255, 0.3);
+  border: solid 1px rgba(255, 255, 255, 0.6);
   border-radius: 4px;
+
   &.active {
-    background-color: skyblue;
-    border: solid 2px skyblue;
-    content: url(./images/check.svg);
+    background-color: white;
+    border: none;
+    color: dodgerblue;
+    font-size: 12px;
+    &::before {
+      font-family: "iconfont";
+      content: "\e639";
+    }
   }
 }
 
 .tool-bar {
   height: 40px;
   padding: 0 10px;
-  cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
+  gap: 10px;
+  select {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    font-size: 14px;
+  }
+  i {
+    font-size: 20px;
+    display: inline-block;
+    cursor: pointer;
+    &.active {
+      color: dodgerblue;
+    }
+  }
   > button {
     height: 40px;
     border: none;
-    font-size: 16px;
-    padding: 0 10px;
+    font-size: 14px;
+
+    cursor: pointer;
     background-color: transparent;
 
-    &.active {
+    &.active,
+    &:hover {
       color: dodgerblue;
     }
   }
@@ -265,6 +248,42 @@ table.detail-table {
   height: calc(100% - 100px);
   user-select: none;
   overflow: hidden auto;
+}
+.book-list1 {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 100px);
+  user-select: none;
+  overflow: hidden auto;
+}
+.book-item1 {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  > .title {
+    display: inline-block;
+    width: calc(100% - 60px);
+    font-size: 16px;
+    overflow: hidden;
+    word-break: break-all;
+    flex: 1;
+  }
+  .progress {
+    font-size: 14px;
+  }
+  .more-icon {
+    height: 20px;
+    width: 20px;
+    cursor: pointer;
+  }
+  &:not(:last-child) {
+    border-bottom: solid 1px #ccc;
+  }
+  &:hover {
+    color: dodgerblue;
+  }
 }
 .book-item {
   display: inline-block;
@@ -309,10 +328,12 @@ table.detail-table {
       flex: 1;
     }
     i {
-      height: 16px;
-      width: 16px;
-      opacity: 0.5;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.5);
       cursor: pointer;
+      &:hover {
+        color: white;
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-import {BrowserWindow, app, ipcMain} from "electron";
+import {BrowserWindow, app, ipcMain, shell} from "electron";
 import jschardet from "jschardet";
 import {createRequire} from "node:module";
 import {BOOKLIST} from "./config";
@@ -64,13 +64,27 @@ function createWindow() {
       }
     }
   });
+  ipcMain.on("openPath", (ev: any, op: any) => {
+    if (fs.existsSync(op.data)) {
+      shell.showItemInFolder(op.data);
+    }
+  });
   ipcMain.on("getFile", (ev: any, op: any) => {
     if (fs.existsSync(op.data.path)) {
       try {
-        let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
-        const {encoding} = jschardet.detect(buf);
-        buf = iconv.decode(buf, encoding);
-        win.webContents.send(op.cb, buf.toString());
+        if (op.data.encode === "auto") {
+          let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
+          const {encoding} = jschardet.detect(buf);
+          buf = iconv.decode(buf, encoding);
+          win.webContents.send(op.cb, buf.toString());
+        } else if (op.data.encode) {
+          let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
+          buf = iconv.decode(buf, op.data.encode);
+          win.webContents.send(op.cb, buf.toString());
+        } else {
+          let buf = fs.readFileSync(op.data.path);
+          win.webContents.send(op.cb, buf.toString());
+        }
       } catch (error) {
         win.webContents.send(op.cb, "");
       }

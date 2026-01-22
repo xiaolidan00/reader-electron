@@ -1,10 +1,26 @@
 <script setup lang="ts">
-  import {reactive, computed, onMounted, onBeforeUnmount} from "vue";
-  import {selectBook, dataList, bookItem, listSearchKey} from "../config.ts";
-  import {BookType} from "../@types";
-  import Controller, {fileMap, getData} from "../controllers/Controller.ts";
-  import {isElectron} from "../utils/utils.ts";
+  import {reactive, computed, onMounted, onBeforeUnmount, inject} from "vue";
 
+  import {AppStoreType, BookType, ListStoreType} from "../@types";
+  import {sortList, showList} from "../data/index";
+  import Controller, {fileMap} from "../controllers/Controller.ts";
+  import {isElectron} from "../utils/utils.ts";
+  import {cloneDeep} from "lodash-es";
+  import {useEventBus} from "../utils/EventEmitter.ts";
+
+  const appStore = inject<AppStoreType>("AppStore")!;
+  const state = reactive<ListStoreType>({
+    showType: localStorage.getItem("showType") || "card",
+    sortType: localStorage.getItem("sortType") || "updateTimeDesc",
+    searchKey: "",
+    isEdit: false,
+    checkMap: {},
+    isAll: false,
+    disable: false,
+    isDetail: false,
+    dataList: [],
+    bookItem: undefined
+  });
   const formatNum = (v: number) => {
     return new Intl.NumberFormat().format(v);
   };
@@ -33,34 +49,56 @@
         }
       }
     ];
-    if (isElectron()) {
-      list.push({
-        name: "文件路径",
-        prop: "path"
-      });
-    }
-
     return list;
   });
 
-  type StateType = {
-    isEdit: boolean;
-    checkMap: {[n: string]: boolean};
-    isAll: boolean;
-    disable: boolean;
-    isDetail: boolean;
-  };
-  const state = reactive<StateType>({
-    isEdit: false,
-    checkMap: {},
-    isAll: false,
-    disable: false,
-    isDetail: false
-  });
   const showDataList = computed(() => {
-    const list = dataList.value;
-    if (listSearchKey.value) {
-      return list.filter((it) => it.name.indexOf(listSearchKey.value) >= 0);
+    let list = cloneDeep(state.dataList);
+    if (state.searchKey) {
+      list = list.filter((it) => it.name.indexOf(state.searchKey) >= 0);
+    }
+    if (state.sortType.startsWith("size")) {
+      if (state.sortType.endsWith("Asc")) {
+        list.sort((a, b) => a.size - b.size);
+      } else {
+        list.sort((a, b) => b.size - a.size);
+      }
+    } else if (state.sortType.startsWith("name")) {
+      if (state.sortType.endsWith("Asc")) {
+        list.sort((a, b) => {
+          const m = Math.min(a.pinyin.length, b.pinyin.length);
+          for (let i = 0; i < m; i++) {
+            const a1 = a.pinyin.charCodeAt(i);
+            const b1 = b.pinyin.charCodeAt(i);
+            if (a1 === b1) {
+              continue;
+            } else {
+              return a1 - b1;
+            }
+          }
+          return a.pinyin.length - b.pinyin.length;
+        });
+      } else {
+        list.sort((a, b) => {
+          const m = Math.min(a.pinyin.length, b.pinyin.length);
+          for (let i = 0; i < m; i++) {
+            const a1 = a.pinyin.charCodeAt(i);
+            const b1 = b.pinyin.charCodeAt(i);
+            if (a1 === b1) {
+              continue;
+            } else {
+              return b1 - a1;
+            }
+          }
+          return b.pinyin.length - a.pinyin.length;
+        });
+      }
+    } else {
+      if (state.sortType.endsWith("Asc")) {
+        list.sort((a, b) => a.updateTime - b.updateTime);
+      } else {
+        list.sort((a, b) => b.updateTime - a.updateTime);
+      }
     }
     return list;
   });
@@ -71,17 +109,21 @@
     state.disable = false;
   };
   const onRightItem = (item: BookType) => {
+    state.bookItem = item;
     state.isDetail = true;
-    bookItem.value = item;
   };
   const onReadTxt = (item: BookType) => {
     if (state.isEdit) {
       onCheckItem(item);
     } else {
       if (!isElectron() && !fileMap[item.id]) return alert("请选择文件");
-      selectBook.value = item.id;
-      bookItem.value = item;
+      appStore.selectBook = item.id;
+      appStore.selectBookItem = item;
+      Controller.setBook(appStore.selectBookItem);
     }
+  };
+  const updateSort = () => {
+    localStorage.setItem("sortType", state.sortType);
   };
   const onDelTxt = (isFile?: boolean) => {
     const ids: string[] = [];
@@ -97,8 +139,11 @@
     state.checkMap = {};
     state.isEdit = false;
   };
+  const openPath = () => {
+    if (state.bookItem) Controller.openPath(state.bookItem.path);
+  };
   const onDelOneTxt = (isFile?: boolean) => {
-    Controller.delTxt({[bookItem.value!.id]: true}, isFile);
+    Controller.delTxt({[state.bookItem!.id]: true}, isFile);
     state.checkMap = {};
     state.isDetail = false;
     state.isEdit = false;
@@ -106,21 +151,21 @@
   const onAll = () => {
     state.isAll = !state.isAll;
     if (state.isAll) {
-      for (let k in state.checkMap) {
-        state.checkMap[k] = true;
-      }
+      showDataList.value.forEach((a) => {
+        state.checkMap[a.id] = true;
+      });
     } else {
       state.checkMap = {};
     }
   };
   const onCheckItem = (item: BookType) => {
     state.checkMap[item.id] = !state.checkMap[item.id];
-    console.log(state.checkMap);
+    // console.log(state.checkMap);
     let count = 0;
     for (let k in state.checkMap) {
       if (state.checkMap[k]) count++;
     }
-    if (count === Object.keys(state.checkMap).length) {
+    if (count === state.dataList.length) {
       state.isAll = true;
     } else if (count === 0) {
       state.isAll = false;
@@ -130,7 +175,7 @@
   const onBatch = () => {
     state.isEdit = !state.isEdit;
     const orginMap: Record<string, boolean> = {};
-    dataList.value.forEach((a) => {
+    state.dataList.forEach((a) => {
       orginMap[a.id] = false;
     });
     state.checkMap = orginMap;
@@ -157,7 +202,6 @@
         }
       }
     }
-
     if (fileList.length === 0 && ev.dataTransfer?.files?.length) {
       fileList = Array.from(ev.dataTransfer.files).filter((it) => it.name.endsWith(".txt"));
     }
@@ -165,8 +209,11 @@
       Controller.openTxtInfo(fileList);
     }
   };
-  onMounted(() => {
-    getData();
+  onMounted(async () => {
+    appStore.loading = true;
+    state.dataList = await Controller.getData();
+    Controller.setDataList(state.dataList);
+    appStore.loading = false;
     document.addEventListener("dragover", onDragOver);
     document.addEventListener("drop", onDropFile);
   });
@@ -174,24 +221,51 @@
     document.removeEventListener("dragover", onDragOver);
     document.removeEventListener("drop", onDropFile);
   });
+  useEventBus("refreshList", (v: BookType[]) => {
+    state.dataList = v;
+  });
 </script>
 
 <template>
   <div class="search-box">
     <div class="search">
-      <input placeholder="搜索关键词" type="text" v-model="listSearchKey" />
-      <i class="close-icon" @click="listSearchKey = ''" v-show="listSearchKey"></i>
+      <input placeholder="搜索关键词" type="text" v-model="state.searchKey" />
+      <i class="iconfont icon-close" @click="state.searchKey = ''" v-show="state.searchKey"></i>
     </div>
-    <!-- <i class="more-icon"></i> -->
   </div>
   <div class="tool-bar">
-    <button @click="openTxt()" :disabled="state.disable">导入TXT</button>
+    <i title="是否开启批量操作" :class="['iconfont icon-setting', state.isEdit ? 'active' : '']" @click="onBatch"></i>
+    <button v-if="!state.isEdit" @click="openTxt()" :disabled="state.disable">导入</button>
+
     <i v-if="state.isEdit" :class="['check', state.isAll ? 'active' : '']" @click="onAll()"></i>
-    <button :class="[state.isEdit ? 'active' : '']" @click="onBatch">批量操作</button>
+
     <button v-if="state.isEdit" @click="onDelTxt()">删除记录</button>
     <button v-if="state.isEdit && isElectron()" @click="onDelTxt(true)">删除文件</button>
+    <select v-if="!state.isEdit" v-model="state.sortType" @change="updateSort">
+      <option v-for="item in sortList" :key="item.value" :value="item.value">
+        {{ item.label }}
+      </option>
+    </select>
+
+    <select v-if="!state.isEdit" v-model="state.showType">
+      <option v-for="item in showList" :key="item.value" :value="item.value">
+        {{ item.label }}
+      </option>
+    </select>
   </div>
-  <div class="book-list">
+  <div class="book-list1" v-if="state.showType === 'list'">
+    <div v-for="item in showDataList" class="book-item1" :key="item.name">
+      <i
+        v-if="state.isEdit"
+        :class="['check', state.checkMap[item.id] ? 'active' : '']"
+        @click.self="onCheckItem(item)"
+      ></i>
+      <span class="title" @click.self="onReadTxt(item)">{{ item.name }}</span>
+      <span class="progress">{{ item.chapter + 1 }}/{{ item.total }} </span>
+      <i class="iconfont icon-More" @click="onRightItem(item)"></i>
+    </div>
+  </div>
+  <div class="book-list" v-else>
     <div class="book-item" v-for="item in showDataList" :key="item.name">
       <div class="book-top">
         <i
@@ -206,14 +280,14 @@
       </div>
       <div class="book-detail" @click="onRightItem(item)">
         <span>{{ item.chapter + 1 }}/{{ item.total }} </span>
-        <i class="more-icon"></i>
+        <i class="iconfont icon-More"></i>
       </div>
     </div>
   </div>
-  <div class="dialog-bg" v-if="state.isDetail && bookItem">
+  <div class="dialog-bg" v-if="state.isDetail && state.bookItem">
     <div class="blank" @click="state.isDetail = false"></div>
     <div class="dialog-body">
-      <div class="chapter-title">{{ bookItem.name }}</div>
+      <div class="chapter-title">{{ state.bookItem.name }}</div>
       <div>
         <table class="detail-table">
           <tr v-for="(item, idx) in detailSet" :key="idx">
@@ -221,11 +295,20 @@
             <td>
               {{
                 item.idx
-                  ? (bookItem[item.prop] as number) + 1
+                  ? (state.bookItem[item.prop] as number) + 1
                   : item.formatter
-                  ? item.formatter(bookItem[item.prop])
-                  : bookItem[item.prop]
+                    ? item.formatter(state.bookItem[item.prop])
+                    : state.bookItem[item.prop]
               }}
+            </td>
+          </tr>
+          <tr v-if="isElectron()">
+            <td>文件路径</td>
+            <td>
+              <div style="display: flex; flex-wrap: wrap">
+                {{ state.bookItem.path }}
+                <span class="open-text" @click="openPath">打开</span>
+              </div>
             </td>
           </tr>
         </table>

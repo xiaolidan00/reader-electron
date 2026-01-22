@@ -1,6 +1,8 @@
-# Txt 阅读器 ReaderElectron
+# Txt 阅读器 ReaderElectron与Web端
 
 简单的 txt 阅读器，方便 pc 端摸鱼看或听小说，嘿嘿
+
+访问地址：https://www.xiaolidan00.top/read/
 
 ## v1.0.0
 
@@ -47,6 +49,20 @@
 
 - 统一 web 端和 electron 代码
 - 字体大小和行高设置
+- 阅读时复制当页文本，禁用启用翻页动作
+- 列表页新增排序（时间，名称，文件大小），视图模式切换列表和卡片
+- 点开书籍详情，electron 时路径可点击弹出文件所在对话框
+- 切换编码方式
+- web 端关闭前保存进度，返回优化
+- 播放上下页翻页
+
+## v1.0.7
+
+- 搜索时全选当前列表选择
+- 修复播放时标题高亮问题，和按空格键播放中断问题
+- 朗读新增重新播放当前页
+- markdown文档可导入
+- 优化tts，梳理全局变量
 
 # electron 开发问题
 
@@ -63,7 +79,7 @@ downloadArtifact({
   force: process.env.force_no_cache === "true",
   cacheRoot: process.env.electron_config_cache,
   checksums:
-    process.env.electron_use_remote_checksums ?? process.env.npm_config_electron_use_remote_checksums
+    (process.env.electron_use_remote_checksums ?? process.env.npm_config_electron_use_remote_checksums)
       ? undefined
       : require("./checksums.json"),
   platform,

@@ -1,12 +1,19 @@
 <template>
-  <Drawer :show="isSet" @hide="onHide" :onShow="onShow">
+  <Drawer :show="state.isSet" @hide="onHide" :onShow="onShow">
     <div class="chapter-set">
       <table>
         <tbody>
           <tr>
             <td>字体大小</td>
             <td>
-              <input type="number" :min="12" :max="30" :step="1" v-model="bookStyle.fontSize" @change="onChangeStyle" />
+              <input
+                type="number"
+                :min="12"
+                :max="30"
+                :step="1"
+                v-model="state.fontSize"
+                @change="onChangeStyle('fontSize', state.fontSize)"
+              />
             </td>
           </tr>
           <tr>
@@ -17,18 +24,20 @@
                 :min="1"
                 :max="2"
                 :step="0.1"
-                v-model="bookStyle.lineHeight"
-                @change="onChangeStyle"
+                v-model="state.lineHeight"
+                @change="onChangeStyle('lineHeight', state.lineHeight)"
               />
             </td>
           </tr>
           <tr>
             <td>字体颜色</td>
-            <td><input type="color" v-model="bookStyle.fontColor" @change="onChangeStyle" /></td>
+            <td>
+              <input type="color" v-model="state.fontColor" @change="onChangeStyle('fontColor', state.fontColor)" />
+            </td>
           </tr>
           <tr>
             <td>背景颜色</td>
-            <td><input type="color" v-model="bookStyle.bg" @change="onChangeStyle" /></td>
+            <td><input type="color" v-model="state.bg" @change="onChangeStyle('bg', state.bg)" /></td>
           </tr>
           <tr>
             <td>章节匹配</td>
@@ -62,8 +71,14 @@
           <tr>
             <td>导出部分章节</td>
             <td>
-              <input type="number" class="chapter-input" v-model="state.startChapter" />~
-              <input type="number" class="chapter-input" v-model="state.endChapter" />
+              <input type="number" min="0" step="1" class="chapter-input" v-model="state.startChapter" />~
+              <input
+                :min="state.startChapter + 1"
+                step="1"
+                type="number"
+                class="chapter-input"
+                v-model="state.endChapter"
+              />
             </td>
           </tr>
           <tr>
@@ -79,48 +94,44 @@
 <script setup lang="ts">
   import Drawer from "./Drawer.vue";
   import {chapterRegex, encodeList} from "../data";
-  import {bookItem, bookStyle} from "../config.ts";
-  import {reactive} from "vue";
+
+  import {inject} from "vue";
   import Controller from "../controllers/Controller.ts";
-  import {isElectron} from "../utils/utils.ts";
+  import {AppStoreType, BookStoreType} from "../@types/index.ts";
 
-  const state = reactive({
-    regexType: bookItem.value!.regexType ?? -1,
+  const appStore = inject<AppStoreType>("AppStore")!;
+  const state = inject<BookStoreType>("BookStore")!;
 
-    regex: bookItem.value!.regex || "",
-    startChapter: 1,
-    endChapter: 100,
-    encode: bookItem.value!.encode || "UTF-8"
-  });
-  withDefaults(
-    defineProps<{
-      isSet: boolean;
-    }>(),
-    {isSet: false, total: 0}
-  );
-  const emit = defineEmits(["update:isSet", "exportTxt", "changeStyle"]);
+  const emit = defineEmits(["exportTxt", "changeStyle"]);
   const onHide = () => {
-    emit("update:isSet", false);
+    state.isSet = false;
   };
-  const onChangeStyle = () => {
+  const onChangeStyle = (name: string, v: number | string) => {
+    localStorage.setItem(name, v + "");
     emit("changeStyle");
   };
   const onEncode = () => {
-    bookItem.value!.encode = state.encode;
+    appStore.selectBookItem!.encode = state.encode;
+    state.currentChapter = 0;
+    state.currentIndex = 0;
     Controller.changeEncode(state.encode);
   };
   const onRegex = () => {
-    bookItem.value!.regexType = state.regexType;
+    appStore.selectBookItem!.regexType = state.regexType;
     if (state.regexType >= 0) {
       state.regex = chapterRegex[state.regexType].value;
     }
-
+    state.currentChapter = 0;
+    state.currentIndex = 0;
     Controller.changeRegex({regex: state.regex, regexType: state.regexType});
   };
 
   const onShow = () => {
-    state.startChapter = 1;
-    state.endChapter = bookItem.value!.total;
+    state.regexType = appStore.selectBookItem!.regexType ?? -1;
+    state.regex = appStore.selectBookItem!.regex || "";
+    state.encode = appStore.selectBookItem!.encode || "UTF-8";
+    state.startChapter = 0;
+    state.endChapter = appStore.selectBookItem!.total;
   };
   const onExportChapter = () => {
     emit("exportTxt", {start: state.startChapter, end: state.endChapter});
