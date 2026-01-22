@@ -1,5 +1,5 @@
 <template>
-  <Drawer :show="isSet" @hide="onHide" :onShow="onShow">
+  <Drawer :show="state.isSet" @hide="onHide" :onShow="onShow">
     <div class="chapter-set">
       <table>
         <tbody>
@@ -11,8 +11,8 @@
                 :min="12"
                 :max="30"
                 :step="1"
-                v-model="bookStyle.fontSize"
-                @change="onChangeStyle"
+                v-model="state.fontSize"
+                @change="onChangeStyle('fontSize', state.fontSize)"
               />
             </td>
           </tr>
@@ -24,18 +24,20 @@
                 :min="1"
                 :max="2"
                 :step="0.1"
-                v-model="bookStyle.lineHeight"
-                @change="onChangeStyle"
+                v-model="state.lineHeight"
+                @change="onChangeStyle('lineHeight', state.lineHeight)"
               />
             </td>
           </tr>
           <tr>
             <td>字体颜色</td>
-            <td><input type="color" v-model="bookStyle.fontColor" @change="onChangeStyle" /></td>
+            <td>
+              <input type="color" v-model="state.fontColor" @change="onChangeStyle('fontColor', state.fontColor)" />
+            </td>
           </tr>
           <tr>
             <td>背景颜色</td>
-            <td><input type="color" v-model="bookStyle.bg" @change="onChangeStyle" /></td>
+            <td><input type="color" v-model="state.bg" @change="onChangeStyle('bg', state.bg)" /></td>
           </tr>
           <tr>
             <td>章节匹配</td>
@@ -53,12 +55,7 @@
           <tr>
             <td>正则表达式</td>
             <td>
-              <input
-                v-model="state.regex"
-                :disabled="state.regexType != -2"
-                @change="onRegex"
-                type="text"
-              />
+              <input v-model="state.regex" :disabled="state.regexType != -2" @change="onRegex" type="text" />
             </td>
           </tr>
           <tr>
@@ -74,13 +71,7 @@
           <tr>
             <td>导出部分章节</td>
             <td>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                class="chapter-input"
-                v-model="state.startChapter"
-              />~
+              <input type="number" min="0" step="1" class="chapter-input" v-model="state.startChapter" />~
               <input
                 :min="state.startChapter + 1"
                 step="1"
@@ -101,59 +92,49 @@
 </template>
 
 <script setup lang="ts">
-  import Drawer from './Drawer.vue';
-  import { chapterRegex, encodeList } from '../data';
-  import { bookItem, bookStyle, currentChapter, currentIndex } from '../config.ts';
-  import { reactive } from 'vue';
-  import Controller from '../controllers/Controller.ts';
+  import Drawer from "./Drawer.vue";
+  import {chapterRegex, encodeList} from "../data";
 
-  const state = reactive({
-    regexType: -1,
+  import {inject} from "vue";
+  import Controller from "../controllers/Controller.ts";
+  import {AppStoreType, BookStoreType} from "../@types/index.ts";
 
-    regex: '',
-    startChapter: 1,
-    endChapter: 100,
-    encode: 'UTF-8'
-  });
-  withDefaults(
-    defineProps<{
-      isSet: boolean;
-    }>(),
-    { isSet: false, total: 0 }
-  );
-  const emit = defineEmits(['update:isSet', 'exportTxt', 'changeStyle']);
+  const appStore = inject<AppStoreType>("AppStore")!;
+  const state = inject<BookStoreType>("BookStore")!;
+
+  const emit = defineEmits(["exportTxt", "changeStyle"]);
   const onHide = () => {
-    emit('update:isSet', false);
+    state.isSet = false;
   };
-  const onChangeStyle = () => {
-    localStorage.setItem('bookStyle', JSON.stringify(bookStyle));
-    emit('changeStyle');
+  const onChangeStyle = (name: string, v: number | string) => {
+    localStorage.setItem(name, v + "");
+    emit("changeStyle");
   };
   const onEncode = () => {
-    bookItem.value!.encode = state.encode;
-    currentChapter.value = 0;
-    currentIndex.value = 0;
+    appStore.selectBookItem!.encode = state.encode;
+    state.currentChapter = 0;
+    state.currentIndex = 0;
     Controller.changeEncode(state.encode);
   };
   const onRegex = () => {
-    bookItem.value!.regexType = state.regexType;
+    appStore.selectBookItem!.regexType = state.regexType;
     if (state.regexType >= 0) {
       state.regex = chapterRegex[state.regexType].value;
     }
-    currentChapter.value = 0;
-    currentIndex.value = 0;
-    Controller.changeRegex({ regex: state.regex, regexType: state.regexType });
+    state.currentChapter = 0;
+    state.currentIndex = 0;
+    Controller.changeRegex({regex: state.regex, regexType: state.regexType});
   };
 
   const onShow = () => {
-    state.regexType = bookItem.value!.regexType ?? -1;
-    state.regex = bookItem.value!.regex || '';
-    state.encode = bookItem.value!.encode || 'UTF-8';
+    state.regexType = appStore.selectBookItem!.regexType ?? -1;
+    state.regex = appStore.selectBookItem!.regex || "";
+    state.encode = appStore.selectBookItem!.encode || "UTF-8";
     state.startChapter = 0;
-    state.endChapter = bookItem.value!.total;
+    state.endChapter = appStore.selectBookItem!.total;
   };
   const onExportChapter = () => {
-    emit('exportTxt', { start: state.startChapter, end: state.endChapter });
+    emit("exportTxt", {start: state.startChapter, end: state.endChapter});
   };
 </script>
 
@@ -162,9 +143,9 @@
     line-height: 40px;
     padding: 20px;
     select,
-    input[type='number'],
-    input[type='text'],
-    input[type='color'],
+    input[type="number"],
+    input[type="text"],
+    input[type="color"],
     .chapter-input {
       background-color: rgba(255, 255, 255, 0.3);
       border: none;
@@ -190,7 +171,7 @@
     .chapter-input {
       width: 100px !important;
     }
-    input[type='text']:disabled {
+    input[type="text"]:disabled {
       background-color: rgba(0, 0, 0, 0.1);
     }
     table {

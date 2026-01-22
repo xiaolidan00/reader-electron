@@ -3,23 +3,23 @@
     <div class="nav-back">
       <i class="iconfont icon-arrow back-icon" @click="onBack()"></i>
       <span class="title">{{ state.title }}</span>
-      <span class="num"> {{ currentChapter + 1 }} /{{ chapterList.length }}</span>
+      <span class="num"> {{ state.currentChapter + 1 }} /{{ state.chapterList.length }}</span>
     </div>
 
     <div class="book-container" ref="bookContainer" id="bookContainer" @click="onClickPage">
       <div
         class="chapter-title"
         id="titleTxt"
-        v-if="chapterList.length && currentIndex == 0 && chapterList[currentChapter]"
+        v-if="state.chapterList.length && state.currentIndex == 0 && state.chapterList[state.currentChapter]"
       >
-        {{ chapterList[currentChapter].title }}
+        {{ state.chapterList[state.currentChapter].title }}
       </div>
       <div class="book-content" id="contenTxt" v-html="state.showContent"></div>
     </div>
     <div class="book-bottom">
       <i class="iconfont icon-menu" title="章节目录" @click="state.isMenu = true"></i>
       <i
-        :class="['iconfont icon-listen', isPlay ? 'active' : '']"
+        :class="['iconfont icon-listen', state.isPlay ? 'active' : '']"
         title="听书"
         @click="state.isListen = true"
       ></i>
@@ -34,67 +34,84 @@
       <i title="复制当前页内容" class="iconfont icon-fuzhi" @click="onCopyText"></i>
     </div>
   </div>
-  <ChapterPage v-model:is-menu="state.isMenu" @item="onChapterItem"></ChapterPage>
+  <ChapterPage @item="onChapterItem"></ChapterPage>
   <ListenPage
-    v-model:is-listen="state.isListen"
+    :tts="ttsUtil"
     @preChapter="preChapter"
     @nextChapter="nextChapter"
     @prePage="prePage"
     @nextPage="nextPage"
     @index="changeIndex"
   ></ListenPage>
-  <SearchPage v-model:is-search="state.isSearch" @item="onSearchItem"></SearchPage>
-  <SetPage v-model:is-set="state.isSet" @exportTxt="onSaveTxt" @changeStyle="updateStyle"></SetPage>
+  <SearchPage @item="onSearchItem"></SearchPage>
+  <SetPage @exportTxt="onSaveTxt" @changeStyle="updateStyle"></SetPage>
 </template>
 
 <script setup lang="ts">
-  import { ref, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
-  import type { ChapterType, SearchItemType } from '../@types';
-  import SearchPage from './SearchPage.vue';
-  import ChapterPage from './ChapterPage.vue';
-  import ListenPage from './ListenPage.vue';
-  import SetPage from './SetPage.vue';
+  import {ref, nextTick, onBeforeUnmount, onMounted, watch, reactive, provide, inject} from "vue";
+  import type {AppStoreType, BookStoreType, ChapterType, SearchItemType} from "../@types";
+  import SearchPage from "./SearchPage.vue";
+  import ChapterPage from "./ChapterPage.vue";
+  import ListenPage from "./ListenPage.vue";
+  import SetPage from "./SetPage.vue";
 
-  import {
-    selectBook,
-    LineNum,
-    PageNum,
-    loading,
-    bookItem,
-    chapterList,
-    setHighlight,
-    currentChapter,
-    currentIndex,
-    isPlay,
-    bookStyle,
-    bookState as state,
-    defaultBookState,
-    stopSpeak,
-    startSpeak
-  } from '../config.ts';
-  import Controller from '../controllers/Controller.ts';
-  import { EventBus } from '../utils/EventEmitter.ts';
-  import { isMobile } from '../utils/utils.ts';
-  import { cloneDeep, debounce } from 'lodash-es';
+  import Controller from "../controllers/Controller.ts";
+  import {useEventBus} from "../utils/EventEmitter.ts";
+  import {isMobile} from "../utils/utils.ts";
+  import {debounce} from "lodash-es";
+  import {TTSUtuil} from "../utils/ttsUtil.ts";
+  import {setHighlight} from "../utils/highlight.ts";
+  const ttsUtil = new TTSUtuil("titleTxt", "contenTxt");
+  const appStore = inject<AppStoreType>("AppStore")!;
+  const state = reactive<BookStoreType>({
+    speed: Number(localStorage.getItem("speed")) || 1.5,
+    title: "",
+    isMenu: false,
+    detail: [],
+    showContent: "",
+    total: 0,
+    isPlay: false,
+    isListen: false,
+    isSearch: false,
+    isSet: false,
+    isClick: true,
+    currentChapter: 0,
+    currentIndex: 0,
+    LineNum: 20,
+    PageNum: 20,
+
+    fontSize: Number(localStorage.getItem("fontSize")) || 18,
+    lineHeight: Number(localStorage.getItem("lineHeight")) || 2,
+    fontColor: localStorage.getItem("fontColor") || "#505050",
+    bg: localStorage.getItem("bg") || "#faebd7",
+    chapterList: [],
+
+    regexType: -1,
+    regex: "",
+    startChapter: 1,
+    endChapter: 100,
+    encode: "UTF-8"
+  });
+  provide("BookStore", state);
 
   const bookContainer = ref<HTMLDivElement>();
-  loading.value = true;
+  appStore.loading = true;
 
   const updateBook = async () => {
     await Controller.saveBook(
-      selectBook.value + '',
-      currentChapter.value,
-      currentIndex.value,
-      chapterList.value.length
+      appStore.selectBook + "",
+      state.currentChapter,
+      state.currentIndex,
+      state.chapterList.length
     );
   };
 
   const onCopyText = () => {
-    const dom = document.getElementById('bookContainer');
+    const dom = document.getElementById("bookContainer");
     if (dom) {
       navigator.clipboard.writeText(dom.innerText);
 
-      alert('复制成功');
+      alert("复制成功");
     }
   };
   const onSearchItem = async ({
@@ -106,51 +123,52 @@
     searchLen: number;
     searchKey: string;
   }) => {
-    currentIndex.value = item.index;
-    currentChapter.value = item.chapter;
+    state.currentIndex = item.index;
+    state.currentChapter = item.chapter;
     onChapter(item.chapter, 2);
 
     await nextTick();
-    const contenTxt = document.getElementById('contenTxt')!;
+    const contenTxt = document.getElementById("contenTxt")!;
     const textNode = contenTxt.firstChild;
     if (textNode) setHighlight(textNode.textContent!.indexOf(searchKey), textNode, searchLen);
   };
 
   const onBack = () => {
     updateBook();
-    selectBook.value = '';
-    bookItem.value = undefined;
-    currentChapter.value = 0;
-    currentIndex.value = 0;
-    chapterList.value = [];
-    state.value = cloneDeep(defaultBookState);
-    loading.value = false;
+    appStore.selectBook = "";
+    appStore.selectBookItem = undefined;
+    state.currentChapter = 0;
+    state.currentIndex = 0;
+    state.chapterList = [];
+
+    appStore.loading = false;
   };
 
   const preChapter = () => {
-    if (currentChapter.value - 1 >= 0) {
-      onChapter(currentChapter.value - 1, 0);
+    if (state.currentChapter - 1 >= 0) {
+      onChapter(state.currentChapter - 1, 0);
     }
   };
   const nextPage = debounce(() => {
-    if (currentIndex.value + 1 < state.value.total) {
-      currentIndex.value++;
+    if (state.currentIndex + 1 < state.total) {
+      state.currentIndex++;
       changeIndex();
-    } else if (currentChapter.value + 1 < chapterList.value.length) {
-      onChapter(currentChapter.value + 1, 0);
+    } else if (state.currentChapter + 1 < state.chapterList.length) {
+      onChapter(state.currentChapter + 1, 0);
     }
   }, 100);
   const prePage = debounce(() => {
-    if (currentIndex.value - 1 >= 0) {
-      currentIndex.value--;
+    if (state.currentIndex - 1 >= 0) {
+      state.currentIndex--;
       changeIndex();
-    } else if (currentChapter.value - 1 >= 0) {
-      onChapter(currentChapter.value - 1, 1);
+    } else if (state.currentChapter - 1 >= 0) {
+      onChapter(state.currentChapter - 1, 1);
     }
   }, 100);
+  ttsUtil.setNextCb(nextPage);
 
   const onClickPage = (event: MouseEvent) => {
-    if (!state.value.isClick) return;
+    if (!state.isClick) return;
     if (!isMobile()) {
       const x = event.pageX;
       const w = window.innerWidth;
@@ -164,100 +182,103 @@
     }
   };
   watch(
-    () => isPlay.value,
+    () => state.isPlay,
     (val) => {
-      console.log('isPlay.value', val);
+      console.log("state.isPlay", val);
     }
   );
   const changeIndex = async () => {
     getPage();
-    await nextTick();
-    startSpeak();
+
+    if (state.isPlay) {
+      await ttsUtil.play();
+    }
   };
   const nextChapter = () => {
-    if (currentChapter.value < chapterList.value.length) {
-      onChapter(currentChapter.value + 1, 0);
+    if (state.currentChapter < state.chapterList.length) {
+      onChapter(state.currentChapter + 1, 0);
     }
   };
   let titleLine = 0;
   const getPage = () => {
-    const a = currentIndex.value * PageNum.value - titleLine;
-    const b = (currentIndex.value + 1) * PageNum.value - titleLine;
-    state.value.showContent = state.value.detail.slice(a < 0 ? 0 : a, b).join('');
+    const a = state.currentIndex * state.PageNum - titleLine;
+    const b = (state.currentIndex + 1) * state.PageNum - titleLine;
+    state.showContent = state.detail.slice(a < 0 ? 0 : a, b).join("");
   };
 
   const onChapter = (i: number, type: 0 | 1 | 2) => {
-    if (type !== 2) currentChapter.value = i;
-    if (currentChapter.value > chapterList.value.length) {
-      currentChapter.value = chapterList.value.length - 1;
+    if (type !== 2) state.currentChapter = i;
+    if (state.currentChapter > state.chapterList.length) {
+      state.currentChapter = state.chapterList.length - 1;
     }
     // state.isMenu = false;
-    const t: ChapterType = chapterList.value[currentChapter.value];
-    titleLine = Math.ceil(t.title.length / LineNum.value);
+    const t: ChapterType = state.chapterList[state.currentChapter];
+    titleLine = Math.ceil(t.title.length / state.LineNum);
 
-    state.value.detail = t.content as string[];
-    state.value.total = Math.ceil((t.content.length + titleLine) / PageNum.value);
+    state.detail = t.content as string[];
+    state.total = Math.ceil((t.content.length + titleLine) / state.PageNum);
     if (type === 1) {
-      currentIndex.value = state.value.total - 1;
+      state.currentIndex = state.total - 1;
     } else if (type === 2) {
-      if (currentIndex.value >= 0 && currentIndex.value < state.value.total) {
+      if (state.currentIndex >= 0 && state.currentIndex < state.total) {
       } else {
-        currentIndex.value = 0;
+        state.currentIndex = 0;
       }
     } else {
-      currentIndex.value = 0;
+      state.currentIndex = 0;
     }
     changeIndex();
   };
   const onChapterItem = (idx: number) => {
     onChapter(idx, 0);
-    state.value.isMenu = false;
+    state.isMenu = false;
   };
 
   let isFirst = true;
   const onReadTxt = (data: ChapterType[]) => {
-    if (isFirst && bookItem.value) {
-      state.value.title = bookItem.value!.name;
-      currentChapter.value = bookItem.value.chapter;
-      currentIndex.value = bookItem.value.index;
-      console.log('chapter', currentChapter.value, 'index', currentIndex.value);
+    if (isFirst && appStore.selectBookItem) {
+      state.title = appStore.selectBookItem.name;
+      state.currentChapter = appStore.selectBookItem.chapter;
+      state.currentIndex = appStore.selectBookItem.index;
+      console.log("chapter", state.currentChapter, "index", state.currentIndex);
       isFirst = false;
     }
 
     if (data.length) {
-      chapterList.value = data;
+      state.chapterList = data;
     } else {
-      alert('章节解析失败');
+      alert("章节解析失败");
 
       onBack();
       return;
     }
 
-    onChapter(currentChapter.value, 2);
-    loading.value = false;
+    onChapter(state.currentChapter, 2);
+    appStore.loading = false;
   };
-  const onSaveTxt = (op?: { start: number; end: number }) => {
+  /**@description 另存为txt */
+  const onSaveTxt = (op?: {start: number; end: number}) => {
     const start = op?.start || 0;
-    const end = op?.end || chapterList.value.length;
-    const fileName = bookItem.value!.name + `（带章节目录）${op ? start + '-' + end : ''}.txt`;
-    let txt = '';
-    // const t0 = chapterList.value[0];
+    const end = op?.end || state.chapterList.length;
+    const fileName = appStore.selectBookItem!.name + `（带章节目录）${op ? start + "-" + end : ""}.txt`;
+    let txt = "";
+    // const t0 = state.chapterList[0];
     // txt += t0.title + "\n";
     // txt += t0.content.join("") + "\n";
     if (start >= 1) {
-      txt += bookItem.value!.name + '\n';
+      txt += appStore.selectBookItem!.name + "\n";
     }
     for (let i = start; i < end; i++) {
-      const it = chapterList.value[i];
+      const it = state.chapterList[i];
       let t = it.title;
       if (/\s*第\s*[0-9]+\s*章/.test(t)) {
-        t = t.replace(/\s*第\s*[0-9]+\s*章/g, '');
+        t = t.replace(/\s*第\s*[0-9]+\s*章/g, "");
       }
-      txt += `第${i}章 ` + t + '\n';
-      txt += it.content.join('') + '\n';
+      txt += `第${i}章 ` + t + "\n";
+      txt += it.content.join("") + "\n";
     }
-    const file = new File([txt], fileName, { type: 'text/plain' });
-    const dom = document.createElement('a');
+    const file = new File([txt], fileName, {type: "text/plain"});
+    const dom = document.createElement("a");
     dom.download = fileName;
     dom.href = window.URL.createObjectURL(file);
     document.body.appendChild(dom);
@@ -265,15 +286,15 @@
   };
 
   const updateStyle = () => {
-    const container = document.getElementById('bookContainer')!;
-    const fontSize = bookStyle.fontSize * bookStyle.lineHeight;
-    LineNum.value = Math.floor((container.offsetWidth - 20) / bookStyle.fontSize);
-    PageNum.value = Math.floor((container.offsetHeight - 20) / fontSize);
-
-    document.documentElement.style.setProperty('--font', bookStyle.fontColor);
-    document.documentElement.style.setProperty('--bg', bookStyle.bg);
-    document.documentElement.style.setProperty('--font-size', bookStyle.fontSize + 'px');
-    document.documentElement.style.setProperty('--line-height', bookStyle.lineHeight + '');
+    const container = document.getElementById("bookContainer")!;
+    const fontSize = state.fontSize * state.lineHeight;
+    state.LineNum = Math.floor((container.offsetWidth - 20) / state.fontSize);
+    state.PageNum = Math.floor((container.offsetHeight - 20) / fontSize);
+    Controller.setLinePageNum(state.LineNum, state.PageNum);
+    document.documentElement.style.setProperty("--font", state.fontColor);
+    document.documentElement.style.setProperty("--bg", state.bg);
+    document.documentElement.style.setProperty("--font-size", state.fontSize + "px");
+    document.documentElement.style.setProperty("--line-height", state.lineHeight + "");
     Controller.readTxt();
   };
   const onUnload = async () => {
@@ -285,7 +306,7 @@
     offsetX: 0
   };
   const onMouseDown = (ev: TouchEvent) => {
-    if (!state.value.isClick) return;
+    if (!state.isClick) return;
     // console.log("🚀 ~ Book.vue ~ onMouseDown ~ ev:", ev.targetTouches[0]);
     // mobilePos.x = ev.pageX;
     mobilePos.x = ev.targetTouches[0].clientX;
@@ -293,7 +314,7 @@
     ev.stopPropagation();
   };
   const onMouseMove = (ev: TouchEvent) => {
-    if (!state.value.isClick) return;
+    if (!state.isClick) return;
     // console.log("🚀 ~ Book.vue ~ onMouseMove ~ ev:", ev.targetTouches[0]);
     // const x = ev.pageX;
     const x = ev.targetTouches[0].clientX;
@@ -304,7 +325,7 @@
     ev.stopPropagation();
   };
   const onMouseUp = (ev: TouchEvent) => {
-    if (!state.value.isClick) return;
+    if (!state.isClick) return;
     // console.log("🚀 ~ Book.vue ~ onMouseUp ~ ev:", mobilePos.offsetX, mobilePos.x);
     if (Math.abs(mobilePos.offsetX) > 10) {
       if (mobilePos.offsetX < -10) {
@@ -327,34 +348,36 @@
     ev.stopPropagation();
   };
 
-  const onKeyup = debounce((ev: KeyboardEvent) => {
-    if (ev.key === 'ArrowRight') {
+  const onKeyup = debounce(async (ev: KeyboardEvent) => {
+    if (ev.key === "ArrowRight") {
       nextPage();
-    } else if (ev.key === 'ArrowLeft') {
+    } else if (ev.key === "ArrowLeft") {
       prePage();
-    } else if (ev.code === 'Space') {
-      isPlay.value = !isPlay.value;
-      if (isPlay.value) {
-        startSpeak();
+    } else if (ev.code === "Space") {
+      state.isPlay = !state.isPlay;
+      if (state.isPlay) {
+        await ttsUtil.play();
       } else {
-        stopSpeak();
+        ttsUtil.stop();
       }
     }
   }, 100);
+
+  const stopSpeak = () => {
+    ttsUtil.stop();
+  };
+
   onMounted(() => {
-    window.history.pushState(null, 'book', document.URL);
-    window.addEventListener('popstate', onBack, false);
+    window.history.pushState(null, "book", document.URL);
+    window.addEventListener("popstate", onBack, false);
 
     updateStyle();
-    EventBus.on('readTxt', onReadTxt);
-    EventBus.on('backTxt', onBack);
-    EventBus.on('nextPage', nextPage);
     window.onunload = onUnload;
     if (isMobile()) {
       const dom = bookContainer.value!;
-      dom.addEventListener('touchstart', onMouseDown, { passive: false });
-      dom.addEventListener('touchmove', onMouseMove, { passive: false });
-      dom.addEventListener('touchend', onMouseUp, { passive: false });
+      dom.addEventListener("touchstart", onMouseDown, {passive: false});
+      dom.addEventListener("touchmove", onMouseMove, {passive: false});
+      dom.addEventListener("touchend", onMouseUp, {passive: false});
       window.ontouchstart = null;
       window.ontouchmove = null;
       window.ontouchend = null;
@@ -362,33 +385,27 @@
       document.body.ontouchmove = null;
       document.body.ontouchend = null;
     }
-    document.body.addEventListener('keyup', onKeyup);
-    navigator.mediaDevices.addEventListener('devicechange', stopSpeak);
+    document.body.addEventListener("keyup", onKeyup);
+    navigator.mediaDevices.addEventListener("devicechange", stopSpeak);
   });
 
   onBeforeUnmount(async () => {
     if (isMobile()) {
       const dom = bookContainer.value!;
-      dom.removeEventListener('touchstart', onMouseDown);
-      dom.removeEventListener('touchmove', onMouseMove);
-      dom.removeEventListener('touchend', onMouseUp);
+      dom.removeEventListener("touchstart", onMouseDown);
+      dom.removeEventListener("touchmove", onMouseMove);
+      dom.removeEventListener("touchend", onMouseUp);
     }
-    document.body.removeEventListener('keyup', onKeyup);
+    document.body.removeEventListener("keyup", onKeyup);
     await updateBook();
-    window.removeEventListener('popstate', onBack, false);
+    window.removeEventListener("popstate", onBack, false);
 
-    EventBus.off('readTxt', onReadTxt);
-    EventBus.off('backTxt', onBack);
-    EventBus.off('nextPage', nextPage);
-    Controller.saveBook(
-      selectBook.value + '',
-      currentChapter.value,
-      currentIndex.value,
-      chapterList.value.length
-    );
-    stopSpeak();
-    navigator.mediaDevices.removeEventListener('devicechange', stopSpeak);
+    Controller.saveBook(appStore.selectBook + "", state.currentChapter, state.currentIndex, state.chapterList.length);
+    ttsUtil.destroy();
+    navigator.mediaDevices.removeEventListener("devicechange", stopSpeak);
   });
+  useEventBus("readTxt", onReadTxt);
+  useEventBus("backTxt", onBack);
 </script>
 
 <style scoped lang="scss">

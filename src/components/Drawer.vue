@@ -8,17 +8,23 @@
 </template>
 
 <script setup lang="ts">
+  import {debounce} from "lodash-es";
   import {watch} from "vue";
   const props = withDefaults(defineProps<{show: boolean; onShow?: Function}>(), {
     show: false
   });
   const emit = defineEmits(["hide"]);
 
+  const showFun = debounce(() => {
+    if (props.onShow) {
+      props.onShow();
+    }
+  }, 100);
   watch(
     () => props.show,
     (v) => {
-      if (v && props.onShow) {
-        props.onShow();
+      if (v) {
+        showFun();
       }
     }
   );

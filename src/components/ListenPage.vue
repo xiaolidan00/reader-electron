@@ -1,18 +1,18 @@
 <template>
-  <Drawer :show="isListen" @hide="onHide">
+  <Drawer :show="state.isListen" @hide="onHide">
     <div class="listen">
-      <div class="title" v-if="chapterList.length && chapterList[currentChapter]">
-        {{ chapterList[currentChapter].title }}
+      <div class="title" v-if="state.chapterList.length && state.chapterList[state.currentChapter]">
+        {{ state.chapterList[state.currentChapter].title }}
       </div>
-      <div style="padding: 10px; text-align: center">{{ currentIndex + 1 }}/{{ bookState.total }}</div>
+      <div style="padding: 10px; text-align: center">{{ state.currentIndex + 1 }}/{{ state.total }}</div>
       <div class="progress">
-        <input type="range" v-model="currentIndex" @click="changeIndex()" :min="0" :max="bookState.total - 1" />
+        <input type="range" v-model="state.currentIndex" @click="changeIndex()" :min="0" :max="state.total - 1" />
       </div>
 
       <div class="control">
         <i @click="onBtnAction('preChapter')" class="iconfont icon-next"> </i>
         <i @click="onBtnAction('prePage')" class="iconfont icon-arrow"> </i>
-        <i @click="onPlay()" :class="['iconfont', isPlay ? 'icon-pause' : 'icon-play']"> </i>
+        <i @click="onPlay()" :class="['iconfont', state.isPlay ? 'icon-pause' : 'icon-play']"> </i>
         <i @click="onBtnAction('nextPage')" class="iconfont icon-arrow"> </i>
         <i @click="onBtnAction('nextChapter')" class="iconfont icon-next"> </i>
         <i @click="onBtnAction('refresh')" class="iconfont icon-shuaxin"> </i>
@@ -31,20 +31,13 @@
 </template>
 
 <script setup lang="ts">
+  import {BookStoreType} from "../@types";
+  import {TTSUtuil} from "../utils/ttsUtil";
   import Drawer from "./Drawer.vue";
-  import {
-    currentChapter,
-    chapterList,
-    currentIndex,
-    isPlay,
-    speakState as state,
-    bookState,
-    startSpeak,
-    refreshSpeak
-  } from "../config.ts";
-  import {nextTick} from "vue";
 
-  const emit = defineEmits(["update:isListen", "index", "preChapter", "nextChapter", "prePage", "nextPage"]);
+  import {inject} from "vue";
+
+  const emit = defineEmits(["index", "preChapter", "nextChapter", "prePage", "nextPage"]);
 
   const speeds = [
     {name: "0.5X", value: 0.5},
@@ -54,42 +47,37 @@
     {name: "1.8X", value: 1.8},
     {name: "2.0X", value: 2}
   ];
-
-  withDefaults(
-    defineProps<{
-      isListen: boolean;
-    }>(),
-    {isListen: false}
-  );
-
+  const props = withDefaults(defineProps<{tts: TTSUtuil}>(), {});
+  const state = inject<BookStoreType>("BookStore")!;
   const onHide = () => {
-    emit("update:isListen", false);
+    state.isListen = false;
   };
   const changeIndex = () => {
-    emit("index", currentIndex.value);
+    emit("index", state.currentIndex);
   };
   const onBtnAction = (type: "refresh" | "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
     if (type === "refresh") {
-      refreshSpeak();
-      onSpeak();
+      state.isPlay = true;
+      props.tts.speak();
     } else {
       emit(type);
     }
   };
 
-  const onSpeed = (i: number) => {
+  const onSpeed = async (i: number) => {
     state.speed = i;
     localStorage.setItem("speed", i + "");
-    if (isPlay.value) onSpeak();
+    if (state.isPlay) {
+      await props.tts.play();
+    }
   };
-  const onPlay = () => {
-    isPlay.value = !isPlay.value;
-    onSpeak();
-  };
-
-  const onSpeak = async () => {
-    await nextTick();
-    startSpeak();
+  const onPlay = async () => {
+    state.isPlay = !state.isPlay;
+    if (state.isPlay) {
+      await props.tts.play();
+    } else {
+      props.tts.stop();
+    }
   };
 </script>
 

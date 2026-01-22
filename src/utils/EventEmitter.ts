@@ -1,3 +1,5 @@
+import {onBeforeUnmount, onMounted} from "vue";
+
 type EventCallbacks = Map<Function, number>;
 type EventMap = Map<string, EventCallbacks>;
 class EventEmitter {
@@ -47,3 +49,12 @@ class EventEmitter {
   }
 }
 export const EventBus = new EventEmitter();
+
+export const useEventBus = (name: string, cb: Function) => {
+  onMounted(() => {
+    EventBus.on(name, cb);
+  });
+  onBeforeUnmount(() => {
+    EventBus.off(name, cb);
+  });
+};
