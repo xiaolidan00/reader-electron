@@ -1,6 +1,8 @@
-# Txt 阅读器 ReaderElectron
+# Txt 阅读器 ReaderElectron与Web端
 
 简单的 txt 阅读器，方便 pc 端摸鱼看或听小说，嘿嘿
+
+访问地址：https://www.xiaolidan00.top/read/
 
 ## v1.0.0
 
