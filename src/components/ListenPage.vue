@@ -17,21 +17,17 @@
         <i @click="onBtnAction('nextChapter')" class="iconfont icon-next"> </i>
         <i @click="onBtnAction('refresh')" class="iconfont icon-shuaxin"> </i>
       </div>
-      <div class="speed">
-        <span
-          :class="[state.speed == item.value ? 'active' : '']"
-          v-for="item in speeds"
-          :key="item.name"
-          @click="onSpeed(item.value)"
-          >{{ item.name }}</span
-        >
+     <div style="text-align: center;line-height:30px;">播放速度：{{ state.speed }}</div>
+        <div class="progress">
+        <input type="range" v-model="state.speed" @click="onSpeed()" :min="0.1" :max="10" />
       </div>
     </div>
   </Drawer>
 </template>
 
 <script setup lang="ts">
-  import {BookStoreType} from "../@types";
+  import { debounce } from "lodash-es";
+import {BookStoreType} from "../@types";
   import {TTSUtuil} from "../utils/ttsUtil";
   import Drawer from "./Drawer.vue";
 
@@ -64,13 +60,14 @@
     }
   };
 
-  const onSpeed = async (i: number) => {
-    state.speed = i;
-    localStorage.setItem("speed", i + "");
+  const onSpeed =  debounce(async( ) => {  
+    localStorage.setItem("speed", state.speed + "");
+    props.tts.setSpeed(state.speed);
+    
     if (state.isPlay) {
       await props.tts.play();
     }
-  };
+  },100);
   const onPlay = async () => {
     state.isPlay = !state.isPlay;
     if (state.isPlay) {
@@ -102,21 +99,7 @@
         }
       }
     }
-    .speed {
-      display: flex;
-      padding: 20px;
-      line-height: 24px;
-      text-align: center;
-      > span {
-        flex: 1;
-
-        display: inline-block;
-        &.active {
-          color: dodgerblue;
-          font-weight: bold;
-        }
-      }
-    }
+   
     .title {
       white-space: nowrap;
       overflow: hidden;
@@ -128,7 +111,7 @@
       font-size: 18px;
     }
     .progress {
-      padding: 20px;
+      padding: 20px; 
     }
     .listen {
       height: 90%;

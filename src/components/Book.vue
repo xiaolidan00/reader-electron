@@ -64,7 +64,7 @@
   const ttsUtil = new TTSUtuil("titleTxt", "contenTxt");
   const appStore = inject<AppStoreType>("AppStore")!;
   const state = reactive<BookStoreType>({
-    speed: Number(localStorage.getItem("speed")) || 1.5,
+    speed: Number(localStorage.getItem("speed")) || 3,
     title: "",
     isMenu: false,
     detail: [],
