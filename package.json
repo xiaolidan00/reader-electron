@@ -9,7 +9,8 @@
     "buildweb": "vite build --config ./vite.config.web.ts",
     "build": "vite build && electron-builder",
     "preview": "vite preview",
-    "build32": "vite build &&electron-builder --win --ia32"
+    "build32": "vite build &&electron-builder --win --ia32",
+    "lint": "vue-tsc "
   },
   "dependencies": {
     "lodash-es": "^4.17.21",

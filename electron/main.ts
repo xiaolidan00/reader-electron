@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import iconv from "iconv-lite";
 
-const require = createRequire(import.meta.url);
+// const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 process.env.APP_ROOT = path.join(__dirname, "..");
