@@ -155,6 +155,8 @@
       changeIndex();
     } else if (state.currentChapter + 1 < state.chapterList.length) {
       onChapter(state.currentChapter + 1, 0);
+    }else{
+      state.isPlay=false;
     }
   }, 100);
   const prePage = debounce(() => {
@@ -181,12 +183,7 @@
       }
     }
   };
-  watch(
-    () => state.isPlay,
-    (val) => {
-      console.log("state.isPlay", val);
-    }
-  );
+
   const changeIndex = async () => {
     getPage();
 

@@ -6,7 +6,7 @@
       </div>
       <div style="padding: 10px; text-align: center">{{ state.currentIndex + 1 }}/{{ state.total }}</div>
       <div class="progress">
-        <input type="range" v-model="state.currentIndex" @click="changeIndex()" :min="0" :max="state.total - 1" />
+        <input type="range" v-model.number="state.currentIndex" @click="changeIndex()" :step="1" :min="0" :max="state.total - 1" />
       </div>
 
       <div class="control">
@@ -19,7 +19,7 @@
       </div>
      <div style="text-align: center;line-height:30px;">播放速度：{{ state.speed }}</div>
         <div class="progress">
-        <input type="range" v-model="state.speed" @click="onSpeed()" :min="0.1" :max="10" />
+        <input type="range" v-model="state.speed" @click="onSpeed()" :min="0.5" :max="10" />
       </div>
     </div>
   </Drawer>
@@ -48,7 +48,7 @@ import {BookStoreType} from "../@types";
   const onHide = () => {
     state.isListen = false;
   };
-  const changeIndex = () => {
+  const changeIndex = () => {     
     emit("index", state.currentIndex);
   };
   const onBtnAction = (type: "refresh" | "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
