@@ -55,7 +55,7 @@ export class TTSUtuil {
         if (textNode) this.beforeRange = setHighlight(e.charIndex, textNode, e.charLength);
       } else {
         const textNode = this.contentDom.firstChild;
-        if (textNode) this.beforeRange = setHighlight(e.charIndex - titleLen - 1, textNode, e.charLength);
+        if (textNode) this.beforeRange = setHighlight(e.charIndex - titleLen , textNode, e.charLength);
       }
     } else if (this.contentDom) {
       const textNode = this.contentDom.firstChild;

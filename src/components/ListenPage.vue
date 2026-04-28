@@ -19,7 +19,7 @@
       </div>
      <div style="text-align: center;line-height:30px;">播放速度：{{ state.speed }}</div>
         <div class="progress">
-        <input type="range" v-model="state.speed" @click="onSpeed()" :min="0.5" :max="10" />
+        <input type="range" v-model="state.speed" @click="onSpeed()" :min="0.5" :step="0.5" :max="5" />
       </div>
     </div>
   </Drawer>
