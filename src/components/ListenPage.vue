@@ -43,7 +43,7 @@ import {BookStoreType} from "../@types";
     {name: "1.8X", value: 1.8},
     {name: "2.0X", value: 2}
   ];
-  const props = withDefaults(defineProps<{tts: TTSUtuil}>(), {});
+  const props = withDefaults(defineProps<{tts: TTSUtuil,onPlay:Function}>(), {});
   const state = inject<BookStoreType>("BookStore")!;
   const onHide = () => {
     state.isListen = false;
@@ -68,14 +68,14 @@ import {BookStoreType} from "../@types";
       await props.tts.play();
     }
   },100);
-  const onPlay = async () => {
-    state.isPlay = !state.isPlay;
-    if (state.isPlay) {
-      await props.tts.play();
-    } else {
-      props.tts.stop();
-    }
-  };
+  // const onPlay = async () => {
+  //   state.isPlay = !state.isPlay;
+  //   if (state.isPlay) {
+  //     await props.tts.play();
+  //   } else {
+  //     props.tts.stop();
+  //   }
+  // };
 </script>
 
 <style scoped lang="scss">
