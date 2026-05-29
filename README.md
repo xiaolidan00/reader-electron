@@ -66,34 +66,7 @@
 
 # electron 开发问题
 
-## pnpm install electron node install 失败
-
-修改 install.js
-
-`node_modules\electron\install.js`
-
-```js
-downloadArtifact({
-  version,
-  artifactName: "electron",
-  force: process.env.force_no_cache === "true",
-  cacheRoot: process.env.electron_config_cache,
-  checksums:
-    (process.env.electron_use_remote_checksums ?? process.env.npm_config_electron_use_remote_checksums)
-      ? undefined
-      : require("./checksums.json"),
-  platform,
-  arch,
-  mirrorOptions: {
-    mirror: "http://npmmirror.com/mirrors/electron/"
-  }
-})
-  .then(extractFile)
-  .catch((err) => {
-    console.error(err.stack);
-    process.exit(1);
-  });
-```
+## 不要用pnpm,用yarn,npm,否则build失败
 
 ## 配置 npm 镜像
 
@@ -117,17 +90,16 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 `removeLocales.js`
 
 ```js
-import fs from 'node:fs';
+import fs from "node:fs";
 
 export default function (context) {
-  const localeDir = context.appOutDir + '/locales/';
+  const localeDir = context.appOutDir + "/locales/";
   const files = fs.readdirSync(localeDir);
   if (!(files && files.length)) return;
   for (let i = 0, len = files.length; i < len; i++) {
-    if (files[i] !== 'zh-CN.pak') fs.unlinkSync(localeDir + files[i]);
+    if (files[i] !== "zh-CN.pak") fs.unlinkSync(localeDir + files[i]);
   }
 }
-
 ```
 
 ## 注意事项
