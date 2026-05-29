@@ -2,6 +2,7 @@
 {
   $schema: "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   appId: "xld.txt.reader",
+  icon: "public/logo.ico",
   asar: false,
   productName: "Txt阅读器",
   directories: {
@@ -24,7 +25,7 @@
         arch: ["ia32"]
       }
     ],
-    icon: "public/logo.png",
+    icon: "public/logo.ico",
     artifactName: "${productName}-win-${arch}-${version}.${ext}"
   },
   nsis: {
