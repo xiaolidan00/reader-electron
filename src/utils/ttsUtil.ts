@@ -9,7 +9,7 @@ export class TTSUtuil {
   /**@description 文本转语音*/
   tts?: SpeechSynthesisUtterance;
   /**@description 播放速度*/
-  speed = Number(localStorage.getItem('speed'))||3;
+  speed = Number(localStorage.getItem('speed'))||1 ;
   /**@description 播放速度*/
   beforeRange?: Range;
   /**@description 播放完毕结束回调*/
