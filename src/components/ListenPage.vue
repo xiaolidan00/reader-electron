@@ -6,7 +6,7 @@
       </div>
       <div style="padding: 10px; text-align: center">{{ state.currentIndex + 1 }}/{{ state.total }}</div>
       <div class="progress">
-        <input type="range" v-model="state.currentIndex" @click="changeIndex()" :min="0" :max="state.total - 1" />
+        <input type="range" v-model.number="state.currentIndex" @click="changeIndex()" :step="1" :min="0" :max="state.total - 1" />
       </div>
 
       <div class="control">
@@ -17,21 +17,17 @@
         <i @click="onBtnAction('nextChapter')" class="iconfont icon-next"> </i>
         <i @click="onBtnAction('refresh')" class="iconfont icon-shuaxin"> </i>
       </div>
-      <div class="speed">
-        <span
-          :class="[state.speed == item.value ? 'active' : '']"
-          v-for="item in speeds"
-          :key="item.name"
-          @click="onSpeed(item.value)"
-          >{{ item.name }}</span
-        >
+     <div style="text-align: center;line-height:30px;">播放速度：{{ state.speed }}</div>
+        <div class="progress">
+        <input type="range" v-model="state.speed" @click="onSpeed()" :min="0.5" :step="0.5" :max="5" />
       </div>
     </div>
   </Drawer>
 </template>
 
 <script setup lang="ts">
-  import {BookStoreType} from "../@types";
+  import { debounce } from "lodash-es";
+import {BookStoreType} from "../@types";
   import {TTSUtuil} from "../utils/ttsUtil";
   import Drawer from "./Drawer.vue";
 
@@ -47,12 +43,12 @@
     {name: "1.8X", value: 1.8},
     {name: "2.0X", value: 2}
   ];
-  const props = withDefaults(defineProps<{tts: TTSUtuil}>(), {});
+  const props = withDefaults(defineProps<{tts: TTSUtuil,onPlay:Function}>(), {});
   const state = inject<BookStoreType>("BookStore")!;
   const onHide = () => {
     state.isListen = false;
   };
-  const changeIndex = () => {
+  const changeIndex = () => {     
     emit("index", state.currentIndex);
   };
   const onBtnAction = (type: "refresh" | "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
@@ -64,21 +60,22 @@
     }
   };
 
-  const onSpeed = async (i: number) => {
-    state.speed = i;
-    localStorage.setItem("speed", i + "");
+  const onSpeed =  debounce(async( ) => {  
+    localStorage.setItem("speed", state.speed + "");
+    props.tts.setSpeed(state.speed);
+    
     if (state.isPlay) {
       await props.tts.play();
     }
-  };
-  const onPlay = async () => {
-    state.isPlay = !state.isPlay;
-    if (state.isPlay) {
-      await props.tts.play();
-    } else {
-      props.tts.stop();
-    }
-  };
+  },100);
+  // const onPlay = async () => {
+  //   state.isPlay = !state.isPlay;
+  //   if (state.isPlay) {
+  //     await props.tts.play();
+  //   } else {
+  //     props.tts.stop();
+  //   }
+  // };
 </script>
 
 <style scoped lang="scss">
@@ -102,21 +99,7 @@
         }
       }
     }
-    .speed {
-      display: flex;
-      padding: 20px;
-      line-height: 24px;
-      text-align: center;
-      > span {
-        flex: 1;
-
-        display: inline-block;
-        &.active {
-          color: dodgerblue;
-          font-weight: bold;
-        }
-      }
-    }
+   
     .title {
       white-space: nowrap;
       overflow: hidden;
@@ -128,7 +111,7 @@
       font-size: 18px;
     }
     .progress {
-      padding: 20px;
+      padding: 20px; 
     }
     .listen {
       height: 90%;

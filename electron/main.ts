@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import fs from "node:fs";
 import path from "node:path";
 import iconv from "iconv-lite";
+ 
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -29,7 +30,7 @@ function createWindow() {
     // closable: false,
     resizable: false,
     // minimizable: false,
-    icon: path.join(process.env.VITE_PUBLIC, "logo.png"),
+    icon:  path.join(process.env.VITE_PUBLIC, "logo.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs")
     }

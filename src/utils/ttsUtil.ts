@@ -9,7 +9,7 @@ export class TTSUtuil {
   /**@description 文本转语音*/
   tts?: SpeechSynthesisUtterance;
   /**@description 播放速度*/
-  speed = 1.5;
+  speed = Number(localStorage.getItem('speed'))||1 ;
   /**@description 播放速度*/
   beforeRange?: Range;
   /**@description 播放完毕结束回调*/
@@ -55,7 +55,7 @@ export class TTSUtuil {
         if (textNode) this.beforeRange = setHighlight(e.charIndex, textNode, e.charLength);
       } else {
         const textNode = this.contentDom.firstChild;
-        if (textNode) this.beforeRange = setHighlight(e.charIndex - titleLen - 1, textNode, e.charLength);
+        if (textNode) this.beforeRange = setHighlight(e.charIndex - titleLen , textNode, e.charLength);
       }
     } else if (this.contentDom) {
       const textNode = this.contentDom.firstChild;

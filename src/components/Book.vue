@@ -23,7 +23,9 @@
         title="听书"
         @click="state.isListen = true"
       ></i>
+      <i :class="['iconfont', state.isPlay ? 'icon-pause' : 'icon-play']" title="朗读" @click="onPlay()"></i>
       <i class="iconfont icon-search" title="搜索关键词" @click="state.isSearch = true"></i>
+       
       <i class="iconfont icon-setting" title="读书设置" @click="state.isSet = true"></i>
       <i class="iconfont icon-save" @click="onSaveTxt()" title="另存为带章节目录TXT"></i>
       <i
@@ -37,6 +39,7 @@
   <ChapterPage @item="onChapterItem"></ChapterPage>
   <ListenPage
     :tts="ttsUtil"
+    :onPlay="onPlay"
     @preChapter="preChapter"
     @nextChapter="nextChapter"
     @prePage="prePage"
@@ -64,7 +67,7 @@
   const ttsUtil = new TTSUtuil("titleTxt", "contenTxt");
   const appStore = inject<AppStoreType>("AppStore")!;
   const state = reactive<BookStoreType>({
-    speed: Number(localStorage.getItem("speed")) || 1.5,
+    speed: Number(localStorage.getItem("speed")) || 1,
     title: "",
     isMenu: false,
     detail: [],
@@ -96,6 +99,16 @@
 
   const bookContainer = ref<HTMLDivElement>();
   appStore.loading = true;
+
+
+    const onPlay = async () => {
+    state.isPlay = !state.isPlay;
+    if (state.isPlay) {
+      await ttsUtil.play();
+    } else {
+      ttsUtil.stop();
+    }
+  };
 
   const updateBook = async () => {
     await Controller.saveBook(
@@ -155,6 +168,8 @@
       changeIndex();
     } else if (state.currentChapter + 1 < state.chapterList.length) {
       onChapter(state.currentChapter + 1, 0);
+    }else{
+      state.isPlay=false;
     }
   }, 100);
   const prePage = debounce(() => {
@@ -181,12 +196,7 @@
       }
     }
   };
-  watch(
-    () => state.isPlay,
-    (val) => {
-      console.log("state.isPlay", val);
-    }
-  );
+
   const changeIndex = async () => {
     getPage();
 

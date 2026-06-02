@@ -11,7 +11,7 @@
                 :min="12"
                 :max="30"
                 :step="1"
-                v-model="state.fontSize"
+                v-model.number="state.fontSize"
                 @change="onChangeStyle('fontSize', state.fontSize)"
               />
             </td>
@@ -24,7 +24,7 @@
                 :min="1"
                 :max="2"
                 :step="0.1"
-                v-model="state.lineHeight"
+                v-model.number="state.lineHeight"
                 @change="onChangeStyle('lineHeight', state.lineHeight)"
               />
             </td>
@@ -71,13 +71,13 @@
           <tr>
             <td>导出部分章节</td>
             <td>
-              <input type="number" min="0" step="1" class="chapter-input" v-model="state.startChapter" />~
+              <input type="number" :min="0" :step="1" class="chapter-input" v-model.number="state.startChapter" />~
               <input
                 :min="state.startChapter + 1"
-                step="1"
+                :step="1"
                 type="number"
                 class="chapter-input"
-                v-model="state.endChapter"
+                v-model.number="state.endChapter"
               />
             </td>
           </tr>

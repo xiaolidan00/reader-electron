@@ -64,36 +64,18 @@
 - markdown文档可导入
 - 优化tts，梳理全局变量
 
+## v1.0.8
+
+- 修复logo问题
+- 修复设置的数值输入问题
+- 底部新增朗读播放快捷按钮
+- 修复导入文件不刷新问题
+- 修复高亮文本位置问题
+- 修复播放进度条问题
+
 # electron 开发问题
 
-## pnpm install electron node install 失败
-
-修改 install.js
-
-`node_modules\electron\install.js`
-
-```js
-downloadArtifact({
-  version,
-  artifactName: "electron",
-  force: process.env.force_no_cache === "true",
-  cacheRoot: process.env.electron_config_cache,
-  checksums:
-    (process.env.electron_use_remote_checksums ?? process.env.npm_config_electron_use_remote_checksums)
-      ? undefined
-      : require("./checksums.json"),
-  platform,
-  arch,
-  mirrorOptions: {
-    mirror: "http://npmmirror.com/mirrors/electron/"
-  }
-})
-  .then(extractFile)
-  .catch((err) => {
-    console.error(err.stack);
-    process.exit(1);
-  });
-```
+## 不要用pnpm,用yarn,npm,否则build失败
 
 ## 配置 npm 镜像
 
@@ -124,7 +106,7 @@ export default function (context) {
   const files = fs.readdirSync(localeDir);
   if (!(files && files.length)) return;
   for (let i = 0, len = files.length; i < len; i++) {
-    fs.unlinkSync(localeDir + files[i]);
+    if (files[i] !== "zh-CN.pak") fs.unlinkSync(localeDir + files[i]);
   }
 }
 ```
@@ -138,3 +120,5 @@ export default function (context) {
 - node 版本 18.20.2
 - 包管理 yarn
 - electron-builder 打包报错 Fatal error: Unable to commit changes 把电脑管家等关闭即可
+- icon配置,icon大小至少`256x256`，格式`ico`
+ 
