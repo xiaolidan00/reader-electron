@@ -1,29 +1,30 @@
 export type BookType = {
-  id: string;
-  /**标题*/
-  name: string;
   /**当前章节 */
-  chapter: number;
+  currentChapter: number;
   /**当前章节页*/
-  index: number;
+  pageIndex: number;
   /**章节数量*/
-  total: number;
+  totalChapter: number;
   /**字数*/
-  num: number;
+  textNum: number;
   /**更新时间*/
   updateTime: number;
-  /**文件大小*/
-  size: number;
-  /**章节正则类型*/
-  regexType?: number;
-  /**章节正则表达式*/
-  regex?: string;
-  /**编码方式*/
-  encode?: string;
   /**文件路径*/
-  path: string;
-  pinyin: string;
+  filePath: string;
+  /** 文件名称*/
+  fileName: string;
+  /**文件大小*/
+  fileSize: number;
+  /**章节正则类型*/
+  regexType: number;
+  /**章节正则表达式*/
+  regexStr: string;
+  /**编码方式*/
+  encodeStr: string;
+  /**拼音*/
+  pinyinStr: string;
 };
+
 export type ChapterType = {
   index: number;
   /**标题*/

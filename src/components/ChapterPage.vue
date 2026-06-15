@@ -25,7 +25,7 @@
 
   import {computed, inject, reactive, useTemplateRef} from "vue";
 
-  import {BookStoreType} from "../@types";
+  import {BookStoreType} from "../../@types";
 
   const navRef = useTemplateRef("navRef");
 

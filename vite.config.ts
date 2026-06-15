@@ -35,5 +35,8 @@ export default defineConfig({
   ],
   server: {
     port: 9222
+  },
+  build: {
+    minify: process.env.NODE_ENV == "development" ? false : true
   }
 });

@@ -25,7 +25,7 @@
       ></i>
       <i :class="['iconfont', state.isPlay ? 'icon-pause' : 'icon-play']" title="朗读" @click="onPlay()"></i>
       <i class="iconfont icon-search" title="搜索关键词" @click="state.isSearch = true"></i>
-       
+
       <i class="iconfont icon-setting" title="读书设置" @click="state.isSet = true"></i>
       <i class="iconfont icon-save" @click="onSaveTxt()" title="另存为带章节目录TXT"></i>
       <i
@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
   import {ref, nextTick, onBeforeUnmount, onMounted, watch, reactive, provide, inject} from "vue";
-  import type {AppStoreType, BookStoreType, ChapterType, SearchItemType} from "../@types";
+  import type {AppStoreType, BookStoreType, ChapterType, SearchItemType} from "../../@types";
   import SearchPage from "./SearchPage.vue";
   import ChapterPage from "./ChapterPage.vue";
   import ListenPage from "./ListenPage.vue";
@@ -100,8 +100,7 @@
   const bookContainer = ref<HTMLDivElement>();
   appStore.loading = true;
 
-
-    const onPlay = async () => {
+  const onPlay = async () => {
     state.isPlay = !state.isPlay;
     if (state.isPlay) {
       await ttsUtil.play();
@@ -111,12 +110,7 @@
   };
 
   const updateBook = async () => {
-    await Controller.saveBook(
-      appStore.selectBook + "",
-      state.currentChapter,
-      state.currentIndex,
-      state.chapterList.length
-    );
+    await Controller.saveBook(appStore.selectBook + "", state.currentChapter, state.currentIndex);
   };
 
   const onCopyText = () => {
@@ -168,8 +162,8 @@
       changeIndex();
     } else if (state.currentChapter + 1 < state.chapterList.length) {
       onChapter(state.currentChapter + 1, 0);
-    }else{
-      state.isPlay=false;
+    } else {
+      state.isPlay = false;
     }
   }, 100);
   const prePage = debounce(() => {
@@ -247,9 +241,9 @@
   let isFirst = true;
   const onReadTxt = (data: ChapterType[]) => {
     if (isFirst && appStore.selectBookItem) {
-      state.title = appStore.selectBookItem.name;
-      state.currentChapter = appStore.selectBookItem.chapter;
-      state.currentIndex = appStore.selectBookItem.index;
+      state.title = appStore.selectBookItem.fileName;
+      state.currentChapter = appStore.selectBookItem.currentChapter;
+      state.currentIndex = appStore.selectBookItem.pageIndex;
       console.log("chapter", state.currentChapter, "index", state.currentIndex);
       isFirst = false;
     }
@@ -270,13 +264,13 @@
   const onSaveTxt = (op?: {start: number; end: number}) => {
     const start = op?.start || 0;
     const end = op?.end || state.chapterList.length;
-    const fileName = appStore.selectBookItem!.name + `（带章节目录）${op ? start + "-" + end : ""}.txt`;
+    const fileName = appStore.selectBookItem!.fileName + `（带章节目录）${op ? start + "-" + end : ""}.txt`;
     let txt = "";
     // const t0 = state.chapterList[0];
     // txt += t0.title + "\n";
     // txt += t0.content.join("") + "\n";
     if (start >= 1) {
-      txt += appStore.selectBookItem!.name + "\n";
+      txt += appStore.selectBookItem!.fileName + "\n";
     }
     for (let i = start; i < end; i++) {
       const it = state.chapterList[i];
@@ -410,7 +404,7 @@
     await updateBook();
     window.removeEventListener("popstate", onBack, false);
 
-    Controller.saveBook(appStore.selectBook + "", state.currentChapter, state.currentIndex, state.chapterList.length);
+    Controller.saveBook(appStore.selectBook + "", state.currentChapter, state.currentIndex);
     ttsUtil.destroy();
     navigator.mediaDevices.removeEventListener("devicechange", stopSpeak);
   });

@@ -1,4 +1,4 @@
-import {BookType, ChapterType} from "../@types";
+import {BookType, ChapterType} from "../../@types";
 import {EventBus} from "../utils/EventEmitter";
 import {chapterRegex} from "../data";
 import {isElectron} from "../utils/utils";
@@ -17,23 +17,26 @@ export const waitAction = (sendAction: {eventName: string; data?: any}, receive?
         clearTimeout(t);
         resolve(data);
       });
+      window.ipcRenderer.send(sendAction.eventName, {
+        cb: cbId,
+        data: sendAction.data
+      });
+    } else {
+      window.ipcRenderer.send(sendAction.eventName, sendAction.data);
     }
     // console.log("sendAction.eventName", sendAction.eventName, sendAction.data);
-    window.ipcRenderer.send(sendAction.eventName, {
-      cb: cbId,
-      data: sendAction.data
-    });
+
     if (!receive) resolve("");
   });
+};
+export const formatName = (n: string) => {
+  return n.substring(n.lastIndexOf("/") + 1, n.lastIndexOf("."));
 };
 export const fileMap: Record<string, File> = {};
 export default {
   waitAction,
   dataList: [] as BookType[],
 
-  setDataList(list: BookType[]) {
-    this.dataList = list;
-  },
   bookItem: {} as BookType,
   setBook(book: BookType) {
     this.bookItem = book;
@@ -44,8 +47,12 @@ export default {
     this.LineNum = line;
     this.PageNum = page;
   },
+  isFirst: true,
   async getData() {
-    let d;
+    if (!this.isFirst) {
+      return this.dataList;
+    }
+    let d = [];
     if (isElectron()) {
       d = await waitAction(
         {
@@ -53,11 +60,13 @@ export default {
         },
         true
       );
+      this.dataList = d;
     } else {
-      d = localStorage.getItem("BOOK_LIST");
-      if (d) {
+      const list = localStorage.getItem("BOOK_LIST");
+      if (list) {
         try {
-          d = JSON.parse(d);
+          d = JSON.parse(list);
+          this.dataList = d;
         } catch (error) {
           d = [];
         }
@@ -65,25 +74,13 @@ export default {
         d = [];
       }
     }
-
-    if (d) {
-      return d;
-    }
-    return [];
+    this.isFirst = false;
+    return d;
   },
   async save(data: BookType[]) {
-    if (isElectron()) {
-      await waitAction(
-        {
-          eventName: "saveBookList",
-          data: JSON.parse(JSON.stringify(data))
-        },
-        true
-      );
-    } else {
+    if (!isElectron()) {
       localStorage.setItem("BOOK_LIST", JSON.stringify(data));
     }
-    EventBus.emit("refreshList", data);
   },
   async openPath(filePath: string) {
     console.log("openPath", filePath);
@@ -120,8 +117,10 @@ export default {
       upload.click();
     });
   },
-  openTxtInfo(files: File[] | FileList) {
+  async openTxtInfo(files: File[] | FileList) {
     if (files?.length) {
+      const addList: BookType[] = [],
+        updateList: Partial<BookType>[] = [];
       for (let i = 0; i < files.length; i++) {
         const f = files[i];
         let id;
@@ -129,41 +128,60 @@ export default {
           fileMap[f.name] = f;
           id = f.name;
         } else {
-          id = f.path.replace(/[\.|\:\\]/g, "_");
+          id = f.path;
         }
 
         let data: BookType;
         const pping = f.name.substring(0, f.name.lastIndexOf("."));
-        const idx = this.dataList.findIndex((a) => a.id === id);
+        const idx = this.dataList.findIndex((a) => a.filePath === id);
         if (idx >= 0) {
           data = this.dataList[idx];
           this.dataList[idx] = {
             ...data,
-            name: pping,
-            path: f.path,
-            size: f.size,
+            fileSize: f.size,
             updateTime: new Date().getTime()
           };
+          updateList.push({
+            filePath: id,
+            fileSize: f.size,
+            updateTime: new Date().getTime()
+          });
         } else {
           data = {
-            id: id,
-            name: pping,
-            chapter: 0,
-            index: 0,
-            total: 0,
-            num: 0,
+            fileName: pping,
+            currentChapter: 0,
+            pageIndex: 0,
+            totalChapter: 0,
+            textNum: 0,
             updateTime: new Date().getTime(),
-            size: f.size,
+            fileSize: f.size,
             regexType: -1,
-            regex: "",
-            path: f.path,
-            pinyin: convertPinyin(pping).toLowerCase()
-          };
+            regexStr: "",
+            filePath: id,
+            encodeStr: "auto",
+            pinyinStr: convertPinyin(pping).toLowerCase()
+          } as BookType;
           this.dataList.unshift(data);
+          addList.push(data);
         }
       }
-
-      this.save(this.dataList);
+      if (isElectron()) {
+        if (updateList.length) {
+          await waitAction({
+            eventName: "updateBook",
+            data: updateList
+          });
+        }
+        if (addList.length) {
+          await waitAction({
+            eventName: "insertBook",
+            data: addList
+          });
+        }
+      } else {
+        this.save(this.dataList);
+      }
+      EventBus.emit("refreshList", this.dataList);
     }
   },
 
@@ -171,10 +189,11 @@ export default {
   async delTxt(delBooks: Record<string, boolean>, isFile?: boolean) {
     const files: string[] = [];
     this.dataList = this.dataList.filter((a) => {
-      if (delBooks[a.id]) {
-        files.push(a.path);
+      if (delBooks[a.filePath]) {
         if (!isElectron()) {
-          delete fileMap[a.id];
+          delete fileMap[a.filePath];
+        } else {
+          files.push(a.filePath);
         }
         return false;
       }
@@ -182,13 +201,18 @@ export default {
       return true;
     });
 
-    this.save(this.dataList);
-    if (isFile) {
+    if (isElectron()) {
       await waitAction({
-        eventName: "delFile",
-        data: files
+        eventName: "deleteBook",
+        data: {
+          list: files,
+          isFile
+        }
       });
+    } else {
+      this.save(this.dataList);
     }
+    EventBus.emit("refreshList", this.dataList);
   },
 
   /**自动匹配章节正则类型 */
@@ -230,33 +254,52 @@ export default {
   },
 
   /** 修改正则表达式 */
-  changeRegex({regex, regexType}: {regexType: number; regex: string}) {
-    const idx = this.dataList.findIndex((a) => a.id === this.bookItem.id);
+  async changeRegex({regexStr, regexType}: {regexType: number; regexStr: string}) {
+    const idx = this.dataList.findIndex((a) => a.filePath === this.bookItem.filePath);
     if (idx < 0) return;
     const data = this.dataList[idx];
     data.regexType = regexType;
     if (regexType == -1) {
-      data.regex = undefined;
+      data.regexStr = "";
     } else {
-      data.regex = regex;
+      data.regexStr = regexStr;
     }
 
     this.dataList[idx] = data;
 
+    await waitAction({
+      eventName: "updateBook",
+      data: [
+        {
+          filePath: data.filePath,
+          regexType: data.regexType,
+          regexStr: data.regexStr
+        }
+      ]
+    });
+
     this.readTxt();
   },
-  changeEncode(encode: string) {
-    const idx = this.dataList.findIndex((a) => a.id === this.bookItem.id);
+  async changeEncode(encode: string) {
+    const idx = this.dataList.findIndex((a) => a.filePath === this.bookItem.filePath);
     if (idx < 0) return;
     const data = this.dataList[idx];
-    data.encode = encode;
+    data.encodeStr = encode;
     this.dataList[idx] = data;
-
+    await waitAction({
+      eventName: "updateBook",
+      data: [
+        {
+          filePath: data.filePath,
+          encodeStr: encode
+        }
+      ]
+    });
     this.readTxt();
   },
   //获取内容
   async readTxt() {
-    const idx = this.dataList.findIndex((a) => a.id === this.bookItem.id);
+    const idx = this.dataList.findIndex((a) => a.filePath === this.bookItem.filePath);
     if (idx < 0) return;
     const data = this.dataList[idx];
     console.log("readTxt", data);
@@ -271,15 +314,15 @@ export default {
         console.log("🚀 ~ Controller.ts ~ err:", err);
         EventBus.emit("loading", false);
       };
-      reader.readAsText(fileMap[this.bookItem.id]!, data.encode || "UTF-8");
+      reader.readAsText(fileMap[this.bookItem.filePath]!, data.encodeStr || "UTF-8");
     } else {
       try {
         const buf = await this.waitAction(
           {
             eventName: "getFile",
             data: {
-              path: data!.path,
-              encode: data!.encode
+              filePath: data!.filePath,
+              encodeStr: data!.encodeStr
             }
           },
           true
@@ -289,14 +332,14 @@ export default {
       } catch (error) {}
     }
   },
-  readTxtContent(result: string) {
+  async readTxtContent(result: string) {
     if (!result) {
       alert("读取txt失败");
       // EventBus.emit("backTxt");
       EventBus.emit("loading", false);
       return;
     }
-    const idx = this.dataList.findIndex((a) => a.id === this.bookItem.id);
+    const idx = this.dataList.findIndex((a) => a.filePath === this.bookItem.filePath);
     const data = this.dataList[idx];
     const txt = result;
 
@@ -311,12 +354,12 @@ export default {
     const lines = txt.replace(/\r|\t/g, "").split("\n");
 
     let newTitle = "";
-    let title = data.name;
+    let title = data.fileName;
     let content: string[] = [];
     const list: ChapterType[] = [];
     let cIdx = 0;
 
-    const zhangjie = data.regex ? new RegExp(data.regex, "g") : this.getRegex(first3000);
+    const zhangjie = data.regexStr ? new RegExp(data.regexStr, "g") : this.getRegex(first3000);
 
     lines.forEach((it: string, i: number) => {
       let tag = true;
@@ -360,32 +403,54 @@ export default {
         index: 0
       });
     }
-    if (data.num === 0) {
-      data.num = txt.length;
+    if (data.textNum === 0) {
+      data.textNum = txt.length;
       data.updateTime = new Date().getTime();
-      data.total = list.length;
-      this.dataList[idx] = data;
-      this.save(this.dataList);
+      data.totalChapter = list.length;
+      const newData = {
+        filePath: data.filePath,
+        textNum: data.textNum,
+        updateTime: data.updateTime,
+        totalChapter: data.totalChapter
+      };
+      this.dataList[idx] = {...data, ...newData};
+      if (isElectron()) {
+        await waitAction({
+          eventName: "updateBook",
+          data: [newData]
+        });
+      } else {
+        this.save(this.dataList);
+      }
     }
+    console.log("chapter content", list);
     EventBus.emit("readTxt", list);
     EventBus.emit("loading", false);
   },
 
   //保存阅读进度
-  async saveBook(id: string, chapter: number, index: number, total: number) {
-    const idx = this.dataList.findIndex((a) => a.id === id);
+  async saveBook(filePath: string, chapter: number, index: number) {
+    const idx = this.dataList.findIndex((a) => a.filePath === filePath);
     if (idx >= 0) {
       const data = this.dataList[idx];
-      this.dataList[idx] = {
-        ...data,
-        id,
-        chapter,
-        index,
-        total,
+      const newData = {
+        filePath,
+        currentChapter: chapter,
+        pageIndex: index,
         updateTime: new Date().getTime()
       };
-
-      await this.save(this.dataList);
+      this.dataList[idx] = {
+        ...data,
+        ...newData
+      };
+      if (isElectron()) {
+        await waitAction({
+          eventName: "updateBook",
+          data: [newData]
+        });
+      } else {
+        await this.save(this.dataList);
+      }
     }
   }
 };

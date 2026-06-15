@@ -17,7 +17,7 @@
 <script setup lang="ts">
   import {reactive, nextTick, ref, inject} from "vue";
   import Drawer from "./Drawer.vue";
-  import type {BookStoreType, SearchItemType} from "../@types";
+  import type {BookStoreType, SearchItemType} from "../../@types";
   import {setHighlight} from "../utils/highlight";
   const searchList = ref<HTMLDivElement>();
 

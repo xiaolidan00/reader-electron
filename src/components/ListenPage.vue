@@ -6,7 +6,14 @@
       </div>
       <div style="padding: 10px; text-align: center">{{ state.currentIndex + 1 }}/{{ state.total }}</div>
       <div class="progress">
-        <input type="range" v-model.number="state.currentIndex" @click="changeIndex()" :step="1" :min="0" :max="state.total - 1" />
+        <input
+          type="range"
+          v-model.number="state.currentIndex"
+          @click="changeIndex()"
+          :step="1"
+          :min="0"
+          :max="state.total - 1"
+        />
       </div>
 
       <div class="control">
@@ -17,8 +24,8 @@
         <i @click="onBtnAction('nextChapter')" class="iconfont icon-next"> </i>
         <i @click="onBtnAction('refresh')" class="iconfont icon-shuaxin"> </i>
       </div>
-     <div style="text-align: center;line-height:30px;">播放速度：{{ state.speed }}</div>
-        <div class="progress">
+      <div style="text-align: center; line-height: 30px">播放速度：{{ state.speed }}</div>
+      <div class="progress">
         <input type="range" v-model="state.speed" @click="onSpeed()" :min="0.5" :step="0.5" :max="5" />
       </div>
     </div>
@@ -26,8 +33,8 @@
 </template>
 
 <script setup lang="ts">
-  import { debounce } from "lodash-es";
-import {BookStoreType} from "../@types";
+  import {debounce} from "lodash-es";
+  import {BookStoreType} from "../../@types";
   import {TTSUtuil} from "../utils/ttsUtil";
   import Drawer from "./Drawer.vue";
 
@@ -43,12 +50,12 @@ import {BookStoreType} from "../@types";
     {name: "1.8X", value: 1.8},
     {name: "2.0X", value: 2}
   ];
-  const props = withDefaults(defineProps<{tts: TTSUtuil,onPlay:Function}>(), {});
+  const props = withDefaults(defineProps<{tts: TTSUtuil; onPlay: Function}>(), {});
   const state = inject<BookStoreType>("BookStore")!;
   const onHide = () => {
     state.isListen = false;
   };
-  const changeIndex = () => {     
+  const changeIndex = () => {
     emit("index", state.currentIndex);
   };
   const onBtnAction = (type: "refresh" | "preChapter" | "nextChapter" | "prePage" | "nextPage") => {
@@ -60,14 +67,14 @@ import {BookStoreType} from "../@types";
     }
   };
 
-  const onSpeed =  debounce(async( ) => {  
+  const onSpeed = debounce(async () => {
     localStorage.setItem("speed", state.speed + "");
     props.tts.setSpeed(state.speed);
-    
+
     if (state.isPlay) {
       await props.tts.play();
     }
-  },100);
+  }, 100);
   // const onPlay = async () => {
   //   state.isPlay = !state.isPlay;
   //   if (state.isPlay) {
@@ -99,7 +106,7 @@ import {BookStoreType} from "../@types";
         }
       }
     }
-   
+
     .title {
       white-space: nowrap;
       overflow: hidden;
@@ -111,7 +118,7 @@ import {BookStoreType} from "../@types";
       font-size: 18px;
     }
     .progress {
-      padding: 20px; 
+      padding: 20px;
     }
     .listen {
       height: 90%;

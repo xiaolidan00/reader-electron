@@ -1,7 +1,7 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   $schema: "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  appId: "xld.txt.reader", 
+  appId: "xld.txt.reader",
   asar: false,
   productName: "Txt阅读器",
   directories: {
@@ -14,9 +14,7 @@
     artifactName: "${productName}-mac-${arch}-${version}.${ext}"
   },
   win: {
-    target: [
-      "nsis"
-    ],
+    target: ["nsis"],
     icon: "./public/logo.ico",
     artifactName: "${productName}-win-${version}.${ext}"
   },
@@ -25,7 +23,7 @@
     perMachine: false,
     allowToChangeInstallationDirectory: true,
     deleteAppDataOnUninstall: true,
-	  installerIcon: "./public/logo.ico",
+    installerIcon: "./public/logo.ico",
     uninstallerIcon: "./public/logo.ico",
     installerHeaderIcon: "./public/logo.ico"
   },

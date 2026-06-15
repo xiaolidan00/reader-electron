@@ -2,11 +2,9 @@
   import {computed, provide, reactive} from "vue";
   import List from "./components/List.vue";
   import Book from "./components/Book.vue";
-  import {AppStoreType} from "./@types";
+  import {AppStoreType} from "../@types";
   import {useEventBus} from "./utils/EventEmitter";
-  // import VConsole from "vconsole";
 
-  // const vConsole = new VConsole();
   const state = reactive<AppStoreType>({
     loading: true,
     selectBook: "",

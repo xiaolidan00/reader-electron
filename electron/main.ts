@@ -1,12 +1,11 @@
 import {BrowserWindow, app, ipcMain, shell} from "electron";
 import jschardet from "jschardet";
 import {createRequire} from "node:module";
-import {BOOKLIST} from "./config";
 import {fileURLToPath} from "node:url";
 import fs from "node:fs";
 import path from "node:path";
 import iconv from "iconv-lite";
- 
+import {dataBaseUtil} from "./DataBaseUtil";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,7 +29,7 @@ function createWindow() {
     // closable: false,
     resizable: false,
     // minimizable: false,
-    icon:  path.join(process.env.VITE_PUBLIC, "logo.ico"),
+    icon: path.join(process.env.VITE_PUBLIC, "logo.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs")
     }
@@ -38,54 +37,74 @@ function createWindow() {
 
   // Test active push message to Renderer-process.
 
-  ipcMain.on("getBookList", (ev: any, op: any) => {
-    if (fs.existsSync(BOOKLIST)) {
-      try {
-        const books = JSON.parse(fs.readFileSync(BOOKLIST).toString());
+  ipcMain.on("getBookList", async (ev: any, op: any) => {
+    try {
+      const books = await dataBaseUtil.getList();
 
-        win.webContents.send(op.cb, books);
-      } catch (error) {
-        console.log("🚀 ~ main.ts ~ createWindow ~ error:", error);
-        win.webContents.send(op.cb, []);
-      }
-    } else {
+      win.webContents.send(op.cb, books);
+    } catch (error) {
+      console.log("🚀 ~ main.ts ~ createWindow ~ error:", error);
       win.webContents.send(op.cb, []);
     }
   });
-  ipcMain.on("saveBookList", (ev: any, op: any) => {
-    fs.writeFileSync(BOOKLIST, JSON.stringify(op.data));
 
-    win.webContents.send(op.cb, "");
-  });
-  ipcMain.on("delFile", (ev: any, op: any) => {
-    const delData = op.data as string[];
+  ipcMain.on("deleteBook", (ev: any, op: any) => {
+    const delData = op.list as string[];
     for (let i = 0; i < delData.length; i++) {
-      if (fs.existsSync(delData[i])) {
+      dataBaseUtil.delete(delData[i]);
+      if (op.isFile && fs.existsSync(delData[i])) {
         fs.unlinkSync(delData[i]);
       }
     }
   });
-  ipcMain.on("openPath", (ev: any, op: any) => {
-    if (fs.existsSync(op.data)) {
-      shell.showItemInFolder(op.data);
+
+  ipcMain.on("updateBook", async (ev: any, list: any[]) => {
+    try {
+      for (let i = 0; i < list.length; i++) {
+        await dataBaseUtil.update(list[i]);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  ipcMain.on("insertBook", async (ev: any, list: any[]) => {
+    try {
+      for (let i = 0; i < list.length; i++) {
+        await dataBaseUtil.insert(list[i]);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  ipcMain.on("openPath", (ev: any, data: any) => {
+    if (fs.existsSync(data)) {
+      shell.showItemInFolder(data);
     }
   });
   ipcMain.on("getFile", (ev: any, op: any) => {
-    if (fs.existsSync(op.data.path)) {
+    const filePath = op.data.filePath;
+    const encodeStr = op.data.encodeStr;
+    if (fs.existsSync(filePath)) {
       try {
-        if (op.data.encode === "auto") {
-          let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
+        let content = "";
+        if (encodeStr === "auto") {
+          let buf = fs.readFileSync(filePath, {encoding: "binary"});
           const {encoding} = jschardet.detect(buf);
+          //@ts-ignore
           buf = iconv.decode(buf, encoding);
-          win.webContents.send(op.cb, buf.toString());
-        } else if (op.data.encode) {
-          let buf = fs.readFileSync(op.data.path, {encoding: "binary"});
-          buf = iconv.decode(buf, op.data.encode);
-          win.webContents.send(op.cb, buf.toString());
+          content = buf.toString();
+        } else if (encodeStr) {
+          let buf = fs.readFileSync(filePath, {encoding: "binary"});
+          //@ts-ignore
+          buf = iconv.decode(buf, encodeStr);
+          content = buf.toString();
         } else {
-          let buf = fs.readFileSync(op.data.path);
-          win.webContents.send(op.cb, buf.toString());
+          let buf = fs.readFileSync(filePath);
+          content = buf.toString();
         }
+        win.webContents.send(op.cb, content);
       } catch (error) {
         win.webContents.send(op.cb, "");
       }
@@ -124,4 +143,7 @@ app.on("activate", () => {
   }
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  dataBaseUtil.init();
+  createWindow();
+});

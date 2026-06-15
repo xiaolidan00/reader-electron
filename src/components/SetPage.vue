@@ -97,7 +97,7 @@
 
   import {inject} from "vue";
   import Controller from "../controllers/Controller.ts";
-  import {AppStoreType, BookStoreType} from "../@types/index.ts";
+  import {AppStoreType, BookStoreType} from "../../@types";
 
   const appStore = inject<AppStoreType>("AppStore")!;
   const state = inject<BookStoreType>("BookStore")!;
@@ -111,7 +111,7 @@
     emit("changeStyle");
   };
   const onEncode = () => {
-    appStore.selectBookItem!.encode = state.encode;
+    appStore.selectBookItem!.encodeStr = state.encode;
     state.currentChapter = 0;
     state.currentIndex = 0;
     Controller.changeEncode(state.encode);
@@ -123,15 +123,15 @@
     }
     state.currentChapter = 0;
     state.currentIndex = 0;
-    Controller.changeRegex({regex: state.regex, regexType: state.regexType});
+    Controller.changeRegex({regexStr: state.regex, regexType: state.regexType});
   };
 
   const onShow = () => {
     state.regexType = appStore.selectBookItem!.regexType ?? -1;
-    state.regex = appStore.selectBookItem!.regex || "";
-    state.encode = appStore.selectBookItem!.encode || "UTF-8";
+    state.regex = appStore.selectBookItem!.regexStr || "";
+    state.encode = appStore.selectBookItem!.encodeStr || "UTF-8";
     state.startChapter = 0;
-    state.endChapter = appStore.selectBookItem!.total;
+    state.endChapter = appStore.selectBookItem!.totalChapter;
   };
   const onExportChapter = () => {
     emit("exportTxt", {start: state.startChapter, end: state.endChapter});
