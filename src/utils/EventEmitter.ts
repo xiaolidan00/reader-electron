@@ -28,18 +28,18 @@ class EventEmitter {
       }
     }
   }
-  emit(event: string, data?: any) {
+  emit(event: string, ...args: any[]) {
     const fns = this.eventMap.get(event) as EventCallbacks;
     if (fns) {
-      fns.forEach((i: number, fn: Function) => {
-        fn(data);
+      fns.forEach((_i: number, fn: Function) => {
+        fn(...args);
       });
     }
   }
   once(event: string, fn: Function) {
     //包裹一层function，一旦触发就销毁
-    const fun = (data: any) => {
-      fn(data);
+    const fun = (...args: any[]) => {
+      fn(...args);
       this.off(event, fun);
     };
     this.on(event, fun);

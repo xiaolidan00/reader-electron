@@ -1,6 +1,5 @@
 import {BrowserWindow, app, ipcMain, shell} from "electron";
 import jschardet from "jschardet";
-import {createRequire} from "node:module";
 import {fileURLToPath} from "node:url";
 import fs from "node:fs";
 import path from "node:path";
@@ -37,7 +36,7 @@ function createWindow() {
 
   // Test active push message to Renderer-process.
 
-  ipcMain.on("getBookList", async (ev: any, op: any) => {
+  ipcMain.on("getBookList", async (_ev: any, op: any) => {
     try {
       const books = await dataBaseUtil.getList();
 
@@ -48,7 +47,7 @@ function createWindow() {
     }
   });
 
-  ipcMain.on("deleteBook", (ev: any, op: any) => {
+  ipcMain.on("deleteBook", (_ev: any, op: any) => {
     const delData = op.list as string[];
     for (let i = 0; i < delData.length; i++) {
       dataBaseUtil.delete(delData[i]);
@@ -58,7 +57,7 @@ function createWindow() {
     }
   });
 
-  ipcMain.on("updateBook", async (ev: any, list: any[]) => {
+  ipcMain.on("updateBook", async (_ev: any, list: any[]) => {
     try {
       for (let i = 0; i < list.length; i++) {
         await dataBaseUtil.update(list[i]);
@@ -68,7 +67,7 @@ function createWindow() {
     }
   });
 
-  ipcMain.on("insertBook", async (ev: any, list: any[]) => {
+  ipcMain.on("insertBook", async (_ev: any, list: any[]) => {
     try {
       for (let i = 0; i < list.length; i++) {
         await dataBaseUtil.insert(list[i]);
@@ -78,12 +77,12 @@ function createWindow() {
     }
   });
 
-  ipcMain.on("openPath", (ev: any, data: any) => {
+  ipcMain.on("openPath", (_ev: any, data: any) => {
     if (fs.existsSync(data)) {
       shell.showItemInFolder(data);
     }
   });
-  ipcMain.on("getFile", (ev: any, op: any) => {
+  ipcMain.on("getFile", (_ev: any, op: any) => {
     const filePath = op.data.filePath;
     const encodeStr = op.data.encodeStr;
     if (fs.existsSync(filePath)) {

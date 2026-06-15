@@ -42,14 +42,6 @@
 
   const emit = defineEmits(["index", "preChapter", "nextChapter", "prePage", "nextPage"]);
 
-  const speeds = [
-    {name: "0.5X", value: 0.5},
-    {name: "1.0X", value: 1},
-    {name: "1.2X", value: 1.2},
-    {name: "1.5X", value: 1.5},
-    {name: "1.8X", value: 1.8},
-    {name: "2.0X", value: 2}
-  ];
   const props = withDefaults(defineProps<{tts: TTSUtuil; onPlay: Function}>(), {});
   const state = inject<BookStoreType>("BookStore")!;
   const onHide = () => {

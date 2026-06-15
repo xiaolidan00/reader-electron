@@ -45,7 +45,7 @@ class DataBaseUtil {
           values.push(v);
         }
       }
-      const insert = `INSERT INTO ${TABLE} (${keys.join(",")}) VALUES (${keys.map((a) => "?").join(",")})`;
+      const insert = `INSERT INTO ${TABLE} (${keys.join(",")}) VALUES (${keys.map((_a) => "?").join(",")})`;
 
       this.db.run(insert, values, (err: any) => {
         if (err) {

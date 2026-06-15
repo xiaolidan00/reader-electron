@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-  import {ref, nextTick, onBeforeUnmount, onMounted, watch, reactive, provide, inject} from "vue";
+  import {ref, nextTick, onBeforeUnmount, onMounted, reactive, provide, inject} from "vue";
   import type {AppStoreType, BookStoreType, ChapterType, SearchItemType} from "../../@types";
   import SearchPage from "./SearchPage.vue";
   import ChapterPage from "./ChapterPage.vue";
