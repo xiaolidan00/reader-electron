@@ -83,7 +83,7 @@ export default {
     }
   },
   async openPath(filePath: string) {
-    console.log("openPath", filePath);
+    // console.log("openPath", filePath);
     await waitAction({
       eventName: "openPath",
       data: filePath
@@ -302,7 +302,7 @@ export default {
     const idx = this.dataList.findIndex((a) => a.filePath === this.bookItem.filePath);
     if (idx < 0) return;
     const data = this.dataList[idx];
-    console.log("readTxt", data);
+    // console.log("readTxt", data);
     if (!isElectron()) {
       EventBus.emit("loading", true);
 
@@ -423,7 +423,7 @@ export default {
         this.save(this.dataList);
       }
     }
-    console.log("chapter content", list);
+    // console.log("chapter content", list);
     EventBus.emit("readTxt", list);
     EventBus.emit("loading", false);
   },

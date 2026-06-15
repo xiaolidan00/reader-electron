@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
-import {fileURLToPath} from "node:url";
+import {app} from "electron";
 import {createRequire} from "module";
 import {BookType} from "../@types";
 const require = createRequire(import.meta.url);
@@ -13,15 +13,11 @@ const isEmpty = (v: any) => {
 class DataBaseUtil {
   db: any;
   init() {
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-    const dbFolder = VITE_DEV_SERVER_URL ? path.join(__dirname, "../db/") : path.join(process.env.APP_ROOT, "db/");
+    const dbFolder = path.join(app.getPath("appData"), "reader-electron/db/");
     if (!fs.existsSync(dbFolder)) {
       fs.mkdirSync(dbFolder);
     }
-    const dbPath = VITE_DEV_SERVER_URL
-      ? path.join(__dirname, "../db/readerbook.db")
-      : path.join(process.env.APP_ROOT, "db/readerbook.db");
+    const dbPath = path.join(dbFolder, "readerbook.db");
     this.db = new sqlite3.Database(dbPath);
     this.db.exec(`CREATE TABLE IF NOT EXISTS ${TABLE} (
     fileName TEXT NOT NULL,

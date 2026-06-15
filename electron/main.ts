@@ -147,3 +147,6 @@ app.whenReady().then(() => {
   dataBaseUtil.init();
   createWindow();
 });
+app.on("before-quit", async () => {
+  dataBaseUtil.close();
+});

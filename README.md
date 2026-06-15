@@ -73,6 +73,10 @@
 - 修复高亮文本位置问题
 - 修复播放进度条问题
 
+## v1.0.8
+
+- 改用sqlite存储数据
+
 # electron 开发问题
 
 ## 不要用pnpm,用yarn,npm,否则build失败
@@ -121,4 +125,3 @@ export default function (context) {
 - 包管理 yarn
 - electron-builder 打包报错 Fatal error: Unable to commit changes 把电脑管家等关闭即可
 - icon配置,icon大小至少`256x256`，格式`ico`
- 
