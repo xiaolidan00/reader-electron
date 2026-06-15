@@ -7,5 +7,8 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     port: 8888
+  },
+  build: {
+    minify: process.env.NODE_ENV == "development" ? false : true
   }
 });
