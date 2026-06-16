@@ -3,6 +3,7 @@ import fs from "node:fs";
 import {app} from "electron";
 import {createRequire} from "module";
 import {BookType} from "../@types";
+import packageJSON from "../package.json";
 const require = createRequire(import.meta.url);
 const sqlite3 = require("sqlite3").verbose();
 
@@ -13,7 +14,7 @@ const isEmpty = (v: any) => {
 class DataBaseUtil {
   db: any;
   init() {
-    const dbFolder = path.join(app.getPath("appData"), "reader-electron/db/");
+    const dbFolder = path.join(app.getPath("appData"), packageJSON.name + "/db/");
     if (!fs.existsSync(dbFolder)) {
       fs.mkdirSync(dbFolder);
     }

@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import iconv from "iconv-lite";
 import {dataBaseUtil} from "./DataBaseUtil";
+import {initUpdate} from "./updateUtil";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -145,6 +146,7 @@ app.on("activate", () => {
 app.whenReady().then(() => {
   dataBaseUtil.init();
   createWindow();
+  initUpdate();
 });
 app.on("before-quit", async () => {
   dataBaseUtil.close();
