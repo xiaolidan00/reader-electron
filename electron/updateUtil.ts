@@ -142,12 +142,14 @@ class UpdateUtil {
             }
           });
       } else {
-        dialog.showMessageBox({
-          title: "提示",
-          message: "已经是最新版本?"
-        });
+        dialog.showMessageBox({type: "info", title: "提示", message: "已经是最新版本?"});
       }
     } catch (error: any) {
+      dialog.showMessageBox({
+        type: "info",
+        title: "提示",
+        message: "获取版本信息失败"
+      });
       this.log("download error:" + error?.message || "");
     }
   }
