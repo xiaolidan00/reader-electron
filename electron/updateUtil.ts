@@ -69,10 +69,20 @@ class UpdateUtil {
         });
       } else {
         this.log(`安装程序异常退出，返回码: ${code}`);
+        dialog.showMessageBox({
+          type: "error",
+          title: "安装异常",
+          message: `安装程序异常退出，返回码: ${code}`
+        });
       }
     });
     installer.on("error", (err) => {
       this.log(err.message || "");
+      dialog.showMessageBox({
+        type: "error",
+        title: "安装异常",
+        message: err.message || "安装异常"
+      });
     });
 
     // 允许父进程不等待子进程即可退出
@@ -128,6 +138,7 @@ class UpdateUtil {
 
               dialog
                 .showMessageBox({
+                  type: "info",
                   title: "提示",
                   message: "下载完毕，是否立即安装?",
                   buttons: ["确定", "关闭"]
