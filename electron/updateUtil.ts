@@ -23,31 +23,44 @@ class UpdateUtil {
       this.log(`开始下载`);
       const fileStream = fs.createWriteStream(this.installerPath);
       let downloadedSize = 0;
+      try {
+        const downloadRes = await axios({
+          method: "get",
+          url: this.url,
+          responseType: "stream",
+          headers: {"Cache-Control": "no-cache"}
+        });
 
-      const downloadRes = await axios({
-        method: "get",
-        url: this.url,
-        responseType: "stream",
-        headers: {}
-      });
+        downloadRes.data.on("data", (chunk: any) => {
+          downloadedSize += chunk.length;
 
-      downloadRes.data.on("data", (chunk: any) => {
-        downloadedSize += chunk.length;
-
-        // this.log("chunkSize" + chunk.length);
-        this.win.webContents.send("downloadProcess", Math.round((downloadedSize / this.size) * 100));
-      });
-      fileStream.on("finish", () => {
-        fileStream.close();
-        this.log("\n下载完成！");
-        resolve(this.installerPath);
-      });
-      fileStream.on("error", (err) => {
+          // this.log("chunkSize" + chunk.length);
+          this.win.webContents.send("downloadProcess", Math.round((downloadedSize / this.size) * 100));
+        });
+        fileStream.on("finish", () => {
+          fileStream.close();
+          this.log("下载完成");
+          resolve(this.installerPath);
+        });
+        fileStream.on("error", (err) => {
+          this.log("download error" + (err?.message || ""));
+          dialog.showMessageBox({
+            type: "error",
+            title: "下载失败",
+            message: `下载安装包异常: ${err?.message}`
+          });
+          fs.unlink(this.installerPath, () => {}); // 出错时清理残缺文件
+          reject(err);
+        });
+        downloadRes.data.pipe(fileStream);
+      } catch (err: any) {
         this.log("download error" + (err?.message || ""));
-        fs.unlink(this.installerPath, () => {}); // 出错时清理残缺文件
-        reject(err);
-      });
-      downloadRes.data.pipe(fileStream);
+        dialog.showMessageBox({
+          type: "error",
+          title: "下载失败",
+          message: `下载安装包异常: ${err?.message}`
+        });
+      }
     });
   }
   runInstall() {
