@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import {reactive, computed, onMounted, onBeforeUnmount, inject} from "vue";
+  import {reactive, computed, onMounted, onBeforeUnmount, inject, ref} from "vue";
 
   import {AppStoreType, BookType, ListStoreType} from "../../@types";
   import {sortList, showList} from "../data/index";
@@ -209,6 +209,14 @@
       Controller.openTxtInfo(fileList);
     }
   };
+  const downloadPercent = ref("");
+  const onCheckUpdate = () => {
+    window.ipcRenderer.send("checkUpdate");
+  };
+  const onDownloadProcess = (_ev: any, percent: number) => {
+    downloadPercent.value = percent + "%";
+  };
+  window.ipcRenderer.on("downloadProcess", onDownloadProcess);
   onMounted(async () => {
     appStore.loading = true;
     state.dataList = await Controller.getData();
@@ -219,6 +227,7 @@
   onBeforeUnmount(() => {
     document.removeEventListener("dragover", onDragOver);
     document.removeEventListener("drop", onDropFile);
+    window.ipcRenderer.off("download-process", onDownloadProcess);
   });
   useEventBus("refreshList", (v: BookType[]) => {
     console.log("🚀 ~ v:", v);
@@ -252,6 +261,9 @@
         {{ item.label }}
       </option>
     </select>
+    <button v-if="!state.isEdit && isElectron()" @click="onCheckUpdate">
+      版本更新<span v-if="downloadPercent">({{ downloadPercent }})</span>
+    </button>
   </div>
   <div class="empty-list" @click="openTxt()" v-if="showDataList.length === 0">请选择文件</div>
   <div class="book-list1" v-if="showDataList.length > 0 && state.showType === 'list'">

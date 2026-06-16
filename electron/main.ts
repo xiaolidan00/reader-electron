@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import iconv from "iconv-lite";
 import {dataBaseUtil} from "./DataBaseUtil";
-import {initUpdate} from "./updateUtil";
+import {updateUtil} from "./updateUtil";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -77,7 +77,9 @@ function createWindow() {
       console.log(error);
     }
   });
-
+  ipcMain.on("checkUpdate", () => {
+    updateUtil.init(win);
+  });
   ipcMain.on("openPath", (_ev: any, data: any) => {
     if (fs.existsSync(data)) {
       shell.showItemInFolder(data);
@@ -146,7 +148,6 @@ app.on("activate", () => {
 app.whenReady().then(() => {
   dataBaseUtil.init();
   createWindow();
-  initUpdate();
 });
 app.on("before-quit", async () => {
   dataBaseUtil.close();
