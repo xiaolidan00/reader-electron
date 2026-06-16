@@ -141,6 +141,11 @@ class UpdateUtil {
                 });
             }
           });
+      } else {
+        dialog.showMessageBox({
+          title: "提示",
+          message: "已经是最新版本?"
+        });
       }
     } catch (error: any) {
       this.log("download error:" + error?.message || "");
